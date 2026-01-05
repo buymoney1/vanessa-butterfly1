@@ -60,7 +60,7 @@ export default function RootLayout({
              <Navbar />
           </div>
           
-          <main className="min-h-screen w-full pt-">
+          <main className="min-h-screen w-full ">
             {children}
           </main>
           
