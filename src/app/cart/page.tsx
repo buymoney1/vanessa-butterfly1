@@ -323,7 +323,7 @@ export default function CartPage() {
                   </button>
                 </div>
                 <div dir="ltr" className="font-mono text-lg tracking-wider text-center">
-                 6219 8619 3494 3506
+                 6219 8618 4284 6312
                 </div>
                 <div className="text-sm opacity-80 text-center mt-4">
                   به نام: نازنین زاهدیان نژادی
