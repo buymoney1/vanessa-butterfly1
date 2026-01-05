@@ -1,0 +1,360 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { FiTrash2, FiShoppingBag, FiArrowRight, FiMinus, FiPlus, FiCopy, FiX, FiCheck, FiCreditCard } from "react-icons/fi";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+
+interface CartItem {
+  id: string;
+  quantity: number;
+  product: {
+    id: string;
+    title: string;
+    price: number;
+    images: string[];
+    inStock: boolean;
+  };
+}
+
+export default function CartPage() {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!session) {
+      router.push("/login");
+      return;
+    }
+    fetchCartItems();
+  }, [session, router]);
+
+  const fetchCartItems = async () => {
+    try {
+      const response = await fetch("/api/cart");
+      if (response.ok) {
+        const data = await response.json();
+        setCartItems(data);
+      }
+    } catch (error) {
+      toast.error("خطا در بارگذاری سبد خرید");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateQuantity = async (productId: string, newQuantity: number) => {
+    if (newQuantity < 1) return;
+
+    setCartItems(prev =>
+      prev.map(item =>
+        item.product.id === productId
+          ? { ...item, quantity: newQuantity }
+          : item
+      )
+    );
+
+    try {
+      const response = await fetch("/api/cart", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, quantity: newQuantity }),
+      });
+
+      if (!response.ok) {
+        toast.error("خطا در به‌روزرسانی تعداد");
+        fetchCartItems();
+      }
+    } catch (error) {
+      toast.error("مشکلی پیش آمده است");
+      fetchCartItems();
+    }
+  };
+
+  const removeItem = async (productId: string) => {
+    try {
+      const response = await fetch(`/api/cart?productId=${productId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setCartItems(prev => prev.filter(item => item.product.id !== productId));
+        toast.success("محصول حذف شد");
+      } else {
+        toast.error("خطا در حذف محصول");
+      }
+    } catch (error) {
+      toast.error("مشکلی پیش آمده است");
+    }
+  };
+
+  const getTotal = () => {
+    return cartItems.reduce(
+      (sum, item) => sum + item.product.price * item.quantity,
+      0
+    );
+  };
+
+  const copyCardNumber = () => {
+    navigator.clipboard.writeText("6219861934943506");
+    toast.success("شماره کارت کپی شد");
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-gray-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin"></div>
+          <p className="text-gray-500 font-medium">در حال بارگذاری سبد خرید...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 pb-20 pt-28 px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* هدر */}
+        <div className="mb-12 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+              سبد خرید شما
+            </h1>
+            <p className="text-gray-500 mt-2">
+              {cartItems.length} محصول در سبد خرید
+            </p>
+          </div>
+          {cartItems.length > 0 && (
+            <button
+              onClick={() => router.push("/")}
+              className="text-gray-600 hover:text-gray-900 text-sm font-medium px-4 py-2 hover:bg-gray-100 rounded-xl transition-colors"
+            >
+              ادامه خرید
+            </button>
+          )}
+        </div>
+
+        {/* وضعیت خالی */}
+        {cartItems.length === 0 ? (
+          <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm max-w-lg mx-auto">
+            <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-6 mx-auto">
+              <FiShoppingBag size={48} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">سبد خرید شما خالی است</h2>
+            <p className="text-gray-500 mb-8">
+              محصولات مورد علاقه خود را به سبد خرید اضافه کنید
+            </p>
+            <button
+              onClick={() => router.push("/")}
+              className="bg-gray-900 text-white px-8 py-3.5 rounded-xl font-medium hover:bg-gray-800 transition-colors inline-flex items-center gap-2"
+            >
+              مشاهده محصولات
+              <FiArrowRight size={18} />
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            
+            {/* لیست محصولات */}
+            <div className="lg:col-span-2 space-y-4">
+              {cartItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white rounded-2xl p-5 border border-gray-100 hover:border-gray-200 transition-colors group"
+                >
+                  <div className="flex gap-4">
+                    {/* تصویر */}
+                    <div className="w-24 h-24 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0">
+                      <img
+                        src={item.product.images[0] || "/placeholder.jpg"}
+                        alt={item.product.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+
+                    {/* اطلاعات */}
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-bold text-gray-900 leading-tight mb-1">
+                            {item.product.title}
+                          </h3>
+                          <p className="text-gray-500 text-sm font-mono">
+                            {item.product.id.slice(-6)}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => removeItem(item.product.id)}
+                          className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                        >
+                          <FiTrash2 size={18} />
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-4">
+                        {/* قیمت */}
+                        <div className="text-lg font-bold text-gray-900">
+                          {item.product.price.toLocaleString()} تومان
+                        </div>
+
+                        {/* کنترلر تعداد */}
+                        <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
+                          <button
+                            onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                            className="w-10 h-10 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-30"
+                            disabled={item.quantity <= 1}
+                          >
+                            <FiMinus size={16} />
+                          </button>
+                          <span className="w-12 text-center font-medium text-gray-900 text-sm">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                            className="w-10 h-10 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
+                          >
+                            <FiPlus size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* خلاصه سفارش */}
+            <div className="lg:sticky lg:top-28">
+              <div className="bg-white rounded-2xl p-6 border border-gray-100">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">
+                  خلاصه سفارش
+                </h2>
+
+                <div className="space-y-4 mb-6">
+                  <div className="flex justify-between text-gray-600">
+                    <span>جمع محصولات</span>
+                    <span className="font-medium">{getTotal().toLocaleString()} تومان</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>هزینه ارسال</span>
+                    <span className="text-green-600 font-medium">رایگان</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-100 pt-6 mb-6">
+                  <div className="flex justify-between text-lg font-bold text-gray-900">
+                    <span>مبلغ قابل پرداخت</span>
+                    <span>{getTotal().toLocaleString()} تومان</span>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setIsCheckoutModalOpen(true)}
+                  className="w-full bg-gray-900 text-white py-3.5 rounded-xl font-medium hover:bg-gray-800 transition-colors mb-3 flex items-center justify-center gap-2"
+                >
+                  <FiCreditCard size={18} />
+                  تکمیل سفارش
+                </button>
+
+                <p className="text-xs text-gray-500 text-center">
+                  سفارش شما شامل گارانتی و پشتیبانی ۲۴ ساعته می‌باشد
+                </p>
+              </div>
+            </div>
+
+          </div>
+        )}
+      </div>
+
+      {/* مودال پرداخت */}
+      {isCheckoutModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 relative animate-in fade-in-0 zoom-in-95 duration-200">
+            
+            {/* هدر مودال */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                  <FiCreditCard size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">پرداخت کارت به کارت</h3>
+                  <p className="text-sm text-gray-500">لطفاً مبلغ را به حساب زیر واریز کنید</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsCheckoutModalOpen(false)}
+                className="text-gray-400 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+
+            {/* اطلاعات محصولات */}
+            <div className="mb-6">
+              <p className="text-sm font-medium text-gray-700 mb-3">محصولات انتخابی:</p>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {cartItems.map((item) => (
+                  <div key={item.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                    <span className="text-sm text-gray-600 truncate">{item.product.title}</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {item.quantity} × {item.product.price.toLocaleString()} تومان
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* کارت بانکی */}
+            <div className="mb-6">
+              <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-4 text-white mb-3">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-sm opacity-80">شماره کارت</span>
+                  <button 
+                    onClick={copyCardNumber}
+                    className="text-white/80 hover:text-white transition-colors p-1"
+                  >
+                    <FiCopy size={16} />
+                  </button>
+                </div>
+                <div dir="ltr" className="font-mono text-lg tracking-wider text-center">
+                 6219 8619 3494 3506
+                </div>
+                <div className="text-sm opacity-80 text-center mt-4">
+                  به نام: نازنین زاهدیان نژادی
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center py-3 border-t border-gray-100">
+                <span className="font-medium text-gray-700">مبلغ قابل پرداخت:</span>
+                <span className="text-xl font-bold text-gray-900">{getTotal().toLocaleString()} تومان</span>
+              </div>
+            </div>
+
+            {/* دکمه واتساپ */}
+            <a
+              href={`https://wa.me/989214032487?text=سلام، مبلغ ${getTotal().toLocaleString()} تومان را به شماره کارت 6219861934943506 واریز کردم. فیش را ارسال می‌کنم.`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-3 bg-green-500 text-white py-3.5 rounded-xl font-medium hover:bg-green-600 transition-colors"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382C17.111 14.197 15.338 13.322 15.007 13.204C14.676 13.086 14.433 13.027 14.19 13.418C13.947 13.809 13.256 14.625 13.045 14.869C12.834 15.113 12.621 15.146 12.261 14.961C11.9 14.776 10.756 14.407 9.407 13.202C8.336 12.244 7.616 11.059 7.405 10.697C7.194 10.335 7.382 10.139 7.567 9.955C7.734 9.789 7.938 9.526 8.123 9.314C8.308 9.102 8.368 8.948 8.488 8.704C8.608 8.46 8.548 8.248 8.458 8.063C8.368 7.878 7.647 6.088 7.346 5.365C7.054 4.662 6.755 4.758 6.549 4.747C6.355 4.737 6.131 4.734 5.906 4.734C5.681 4.734 5.314 4.822 5.006 5.167C4.698 5.512 3.842 6.319 3.842 7.967C3.842 9.615 5.045 11.207 5.221 11.432C5.397 11.657 7.628 15.117 11.067 16.598C11.936 16.984 12.61 17.212 13.135 17.384C14.009 17.666 14.81 17.627 15.441 17.535C16.141 17.433 17.647 16.757 17.955 15.968C18.263 15.179 18.263 14.508 18.173 14.357C18.083 14.206 17.833 14.108 17.472 13.922V14.382ZM12.001 22C6.478 22 2 17.522 2 12C2 6.478 6.478 2 12 2C17.522 2 22 6.478 22 12C22 17.522 17.522 22 12.001 22Z"/>
+              </svg>
+              ارسال فیش در واتساپ
+            </a>
+
+            <p className="text-xs text-gray-500 text-center mt-4">
+              پس از واریز، فیش خود را در واتساپ ارسال کنید
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
