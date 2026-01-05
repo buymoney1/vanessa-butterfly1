@@ -41,9 +41,7 @@ export default function RootLayout({
     <html 
       lang="fa" 
       dir="rtl" 
-      className="scroll-smooth"
-      // اضافه کردن متغیرهای فونت به کلاس‌های html
-      className={`${geistSans.variable} ${geistMono.variable} ${vazirmatn.variable}`}
+  className={`${geistSans.variable} ${geistMono.variable} ${vazirmatn.variable} scroll-smooth`}
     >
       <head>
         <meta charSet="utf-8" />

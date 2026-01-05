@@ -112,7 +112,7 @@ export default function AdminPage() {
       if (data.success && data.categories) {
         setCategories(data.categories);
       } else {
-        console.error("خطا در دریافت دسته‌بندی‌ها:", data.error);
+        console.error("خطا در دریافت دسته‌بندی‌ها:");
         // استفاده از دسته‌بندی‌های پیش‌فرض
         setCategories([
           'الکترونیک',

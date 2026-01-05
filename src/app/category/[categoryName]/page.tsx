@@ -11,6 +11,34 @@ interface CategoryPageProps {
   }>;
 }
 
+// تعریف تایپ برای محصولات دریافتی از Prisma
+interface PrismaProduct {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  images: string[];
+  category: string;
+  inStock: boolean;
+  code: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// تایپ تبدیل شده برای ProductCard
+interface FormattedProduct {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  images: string[];
+  category: string;
+  inStock: boolean;
+  code?: string; // تبدیل از string | null به string | undefined
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
   try {
     const { categoryName } = await params;
@@ -20,7 +48,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     const decodedCategory = decodeURIComponent(categoryName);
     
     // دریافت محصولات دسته‌بندی
-    const products = await prisma.product.findMany({
+    const prismaProducts = await prisma.product.findMany({
       where: {
         category: decodedCategory,
         inStock: true,
@@ -29,6 +57,20 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         createdAt: "desc" 
       },
     });
+
+    // تبدیل محصولات Prisma به فرمت مناسب ProductCard
+    const products: FormattedProduct[] = prismaProducts.map(product => ({
+      id: product.id,
+      title: product.title,
+      description: product.description,
+      price: product.price,
+      images: product.images,
+      category: product.category,
+      inStock: product.inStock,
+      code: product.code ?? undefined, // تبدیل null به undefined
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt,
+    }));
 
     // اگر محصولی در این دسته‌بندی نبود
     if (products.length === 0) {
@@ -63,7 +105,9 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         sortedProducts.sort((a, b) => a.title.localeCompare(b.title));
         break;
       default: // 'newest'
-        sortedProducts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        sortedProducts.sort((a, b) => 
+          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        );
     }
 
     return (
@@ -157,7 +201,63 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                 >
                   گران‌ترین
                 </a>
+                <a
+                  href={`/category/${categoryName}?sort=name`}
+                  className={`px-3 py-1.5 rounded-lg text-sm whitespace-nowrap ${
+                    sort === 'name'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-white text-gray-700 border border-gray-200 hover:border-blue-300'
+                  }`}
+                >
+                  الفبایی
+                </a>
               </div>
+            </div>
+          </div>
+
+          {/* مرتب‌سازی در دسکتاپ */}
+          <div className="mb-6 hidden md:block">
+            <div className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-1">
+              <a
+                href={`/category/${categoryName}?sort=newest`}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  sort === 'newest'
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
+                جدیدترین
+              </a>
+              <a
+                href={`/category/${categoryName}?sort=price-low`}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  sort === 'price-low'
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
+                ارزان‌ترین
+              </a>
+              <a
+                href={`/category/${categoryName}?sort=price-high`}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  sort === 'price-high'
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
+                گران‌ترین
+              </a>
+              <a
+                href={`/category/${categoryName}?sort=name`}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  sort === 'name'
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
+                الفبایی
+              </a>
             </div>
           </div>
 
