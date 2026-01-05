@@ -1,9 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import { Vazirmatn } from "next/font/google"; // فونت فارسی گوگل
 import "./globals.css";
-import Navbar from "../../components/Navbar";
-import Providers from "../../components/Providers";
-
+import Navbar from "@/components/Navbar";
+import Providers from "@/components/Providers";
 
 // تنظیم فونت انگلیسی
 const geistSans = Geist({

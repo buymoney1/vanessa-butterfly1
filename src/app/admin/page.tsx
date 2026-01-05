@@ -5,8 +5,9 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { FiPackage, FiLoader, FiPlus, FiGrid } from "react-icons/fi";
-import ProductCard from "../../../components/ProductCard";
-import ProductForm from "../../../components/ProductForm";
+import ProductCard from "@/components/ProductCard";
+import ProductForm from "@/components/ProductForm";
+
 
 interface Product {
   id: string;

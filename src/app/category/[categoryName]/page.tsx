@@ -1,7 +1,7 @@
 // app/category/[categoryName]/page.tsx
 import { notFound } from "next/navigation";
 import { FiFilter, FiChevronLeft } from "react-icons/fi";
-import ProductCard from "../../../../components/ProductCard";
+import ProductCard from "../../../components/ProductCard";
 import { prisma } from "../../../../lib/prisma";
 
 interface CategoryPageProps {

@@ -1,9 +1,9 @@
 // app/products/[id]/page.tsx
 import { notFound } from "next/navigation";
 import { FiPackage, FiCheck, FiHome, FiGrid } from "react-icons/fi";
-import AddToCartButton from "../../../../components/AddToCartButton";
-import ProductGallery from "../../../../components/ProductGallery";
 import { prisma } from "../../../../lib/prisma";
+import AddToCartButton from "@/components/AddToCartButton";
+import ProductGallery from "@/components/ProductGallery";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
