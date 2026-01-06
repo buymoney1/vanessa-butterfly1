@@ -14,7 +14,7 @@ export default function Navbar() {
   const isAdmin = session?.user?.role === "ADMIN";
 
   // تابع کمکی برای بستن منو و ناوبری
-  const handleMobileLinkClick = (e, href) => {
+  const handleMobileLinkClick = (e: React.MouseEvent<HTMLButtonElement>, href: string) => {
     e.preventDefault();
     setIsMobileMenuOpen(false);
     
@@ -25,7 +25,7 @@ export default function Navbar() {
   };
 
   // تابع کمکی برای خروج
-  const handleSignOut = async (e) => {
+  const handleSignOut = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setIsMobileMenuOpen(false);
     

@@ -215,7 +215,7 @@ export default function ModernAIChatWidget({
         sender: 'bot',
         timestamp: new Date(),
         confidence: 0,
-        source: 'error'
+        source: 'fallback'
       };
       
       setMessages(prev => [...prev, errorMessage]);
