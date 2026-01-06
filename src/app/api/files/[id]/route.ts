@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-
 import { ObjectId } from 'mongodb';
 import { getFileInfo, getFileStream } from "../../../../../lib/gridfs";
 
@@ -26,6 +25,9 @@ export async function GET(
       return NextResponse.redirect(new URL('/placeholder.jpg', request.url));
     }
 
+    // دریافت contentType از metadata
+    const contentType = fileInfo.metadata?.contentType || 'image/jpeg';
+
     // دریافت stream فایل
     const downloadStream = await getFileStream(id);
     if (!downloadStream) {
@@ -42,7 +44,7 @@ export async function GET(
     // برگرداندن فایل
     return new NextResponse(buffer, {
       headers: {
-        'Content-Type': fileInfo.contentType || 'image/jpeg',
+        'Content-Type': contentType,
         'Content-Length': buffer.length.toString(),
         'Cache-Control': 'public, max-age=31536000, immutable',
         'Content-Disposition': `inline; filename="${fileInfo.filename}"`,

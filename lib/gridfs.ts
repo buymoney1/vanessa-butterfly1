@@ -46,11 +46,11 @@ export async function saveFileToGridFS(file: File): Promise<string> {
     
     return new Promise((resolve, reject) => {
       const uploadStream = bucket.openUploadStream(filename, {
-        contentType: file.type,
         metadata: {
           originalName: file.name,
           uploadedAt: new Date(),
-          size: file.size
+          size: file.size,
+          contentType: file.type // contentType در داخل metadata قرار می‌گیرد
         }
       });
       
@@ -114,5 +114,19 @@ export async function fileExists(fileId: string): Promise<boolean> {
     return info !== null;
   } catch (error) {
     return false;
+  }
+}
+
+// دریافت contentType فایل
+export async function getFileContentType(fileId: string): Promise<string> {
+  try {
+    const info = await getFileInfo(fileId);
+    if (info && info.metadata && info.metadata.contentType) {
+      return info.metadata.contentType;
+    }
+    return 'image/jpeg'; // مقدار پیش‌فرض
+  } catch (error) {
+    console.error('Error getting file contentType:', error);
+    return 'image/jpeg';
   }
 }
