@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { FiPackage, FiLoader, FiPlus, FiGrid } from "react-icons/fi";
 import ProductCard from "@/components/ProductCard";
 import ProductForm from "@/components/ProductForm";
+import FAQManagement from "@/components/FAQManagement";
 
 
 interface Product {
@@ -276,7 +277,12 @@ export default function AdminPage() {
               </div>
             )}
           </div>
+
+
         </div>
+        <div className="mt-12">
+            <FAQManagement />
+          </div>
       </div>
     </div>
   );

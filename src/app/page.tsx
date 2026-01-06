@@ -8,6 +8,8 @@ import { Product, Filters as FiltersType } from "./types/product";
 import LoadingState from "@/components/LoadingState";
 import ProductsGrid from "@/components/ProductsGrid";
 import ResponsiveFilters from "@/components/ResponsiveFilters";
+import FAQSection from "@/components/FAQSection";
+import AIChatBox from "@/components/AIChatBox";
 
 function HomeContent() {
   const router = useRouter();
@@ -139,6 +141,12 @@ function HomeContent() {
         filters={filters}
         onClearFilters={clearFilters}
       />
+
+
+ 
+        <AIChatBox />
+
+      <FAQSection/>
     </main>
   );
 }

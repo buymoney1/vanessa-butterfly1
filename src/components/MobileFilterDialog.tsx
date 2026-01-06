@@ -65,9 +65,9 @@ export default function MobileFilterDialog({
       {/* Mobile Filter Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="lg:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-full shadow-lg hover:opacity-90 transition-all duration-300 flex items-center gap-2 shadow-2xl"
+        className="text-xs lg:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-full shadow-lg hover:opacity-90 transition-all duration-300 flex items-center gap-2 shadow-2xl"
       >
-        <FiFilter className="w-5 h-5" />
+        <FiFilter className="w-4 h-4" />
         فیلترها
       </button>
 

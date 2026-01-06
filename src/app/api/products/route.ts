@@ -106,12 +106,14 @@ export async function POST(request: NextRequest) {
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const priceStr = formData.get("price") as string;
+    const shippingCostStr = formData.get("shippingCost") as string || "0";
     const category = formData.get("category") as string;
     const inStock = formData.get("inStock") === "true";
     
-    // تبدیل قیمت
+    // تبدیل قیمت‌ها
     const price = parseFloat(priceStr);
-    
+    const shippingCost = parseFloat(shippingCostStr) || 0;
+
     // اعتبارسنجی
     if (!title || !description || !price || !category) {
       return NextResponse.json(
@@ -179,6 +181,7 @@ export async function POST(request: NextRequest) {
         title,
         description,
         price,
+        shippingCost,
         category,
         inStock,
         images: imageIds,

@@ -72,8 +72,10 @@ export async function PUT(
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const price = parseFloat(formData.get("price") as string);
+    const shippingCostStr = formData.get("shippingCost") as string || "0";
     const category = formData.get("category") as string;
     const inStock = formData.get("inStock") === "true";
+    const shippingCost = parseFloat(shippingCostStr) || 0;
     
     // اعتبارسنجی
     if (!title || !description || !price || !category) {
@@ -138,6 +140,7 @@ export async function PUT(
         title,
         description,
         price,
+        shippingCost,
         category,
         inStock,
         images: finalImages,

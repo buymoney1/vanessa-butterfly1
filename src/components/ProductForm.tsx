@@ -1,8 +1,7 @@
-// components/ProductForm.tsx
 "use client";
 
 import { useState, useEffect } from "react";
-import { FiUpload, FiX, FiPlus, FiTrash2, FiCopy, FiPackage, FiRefreshCw } from "react-icons/fi";
+import { FiUpload, FiX, FiPlus, FiTrash2, FiPackage, FiRefreshCw, FiTruck } from "react-icons/fi";
 import toast from "react-hot-toast";
 
 interface ProductFormProps {
@@ -12,6 +11,7 @@ interface ProductFormProps {
     title: string;
     description: string;
     price: number;
+    shippingCost?: number;
     images: string[];
     category: string;
     inStock: boolean;
@@ -26,6 +26,7 @@ export default function ProductForm({ product, onSuccess, existingCategories = [
     title: "",
     description: "",
     price: "",
+    shippingCost: "",
     category: "",
     newCategory: "",
     inStock: true,
@@ -35,40 +36,6 @@ export default function ProductForm({ product, onSuccess, existingCategories = [
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState<string[]>(existingCategories);
   const [showNewCategory, setShowNewCategory] = useState(false);
-  const [suggestedCodes, setSuggestedCodes] = useState<string[]>([]);
-
-  // توابع تولید کد پیشنهادی
-  const generateProductCode = () => {
-    const timestamp = Date.now().toString().slice(-6);
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-    return `PRD-${timestamp}-${random}`;
-  };
-
-  const generatePersianProductCode = () => {
-    const persianChars = 'آابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهی';
-    let result = 'کد-';
-    for (let i = 0; i < 4; i++) {
-      result += persianChars[Math.floor(Math.random() * persianChars.length)];
-    }
-    result += '-';
-    for (let i = 0; i < 3; i++) {
-      result += Math.floor(Math.random() * 10);
-    }
-    return result;
-  };
-
-  const generateSimpleProductCode = () => {
-    const timestamp = Date.now().toString().slice(-8);
-    return `P-${timestamp}`;
-  };
-
-  const generateCategoryBasedCode = (category: string) => {
-    if (!category) return generateProductCode();
-    
-    const categoryPrefix = category.slice(0, 3).toUpperCase();
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-    return `${categoryPrefix}-${Date.now().toString().slice(-6)}-${random}`;
-  };
 
   useEffect(() => {
     if (product) {
@@ -77,36 +44,31 @@ export default function ProductForm({ product, onSuccess, existingCategories = [
         title: product.title,
         description: product.description,
         price: product.price.toString(),
+        shippingCost: (product.shippingCost || 0).toString(),
         category: product.category,
         newCategory: "",
         inStock: product.inStock,
       });
       setImagePreviews(product.images);
-      
-      if (!product.code) {
-        // برای محصول موجود بدون کد، پیشنهادات تولید کن
-        generateCodeSuggestions(product.category);
-      }
     } else {
-      // برای محصول جدید، پیشنهادات تولید کن
-      generateCodeSuggestions("");
+      setFormData({
+        code: "",
+        title: "",
+        description: "",
+        price: "",
+        shippingCost: "",
+        category: "",
+        newCategory: "",
+        inStock: true,
+      });
     }
     
-    // اضافه کردن دسته‌بندی محصول به لیست اگر وجود ندارد
     if (product?.category && !categories.includes(product.category)) {
       setCategories(prev => [...prev, product.category]);
     }
     
-    // دریافت دسته‌بندی‌های موجود از API
     fetchCategories();
   }, [product]);
-
-  useEffect(() => {
-    // هر بار که دسته‌بندی تغییر کرد، پیشنهادات جدید تولید کن
-    if (formData.category && !showNewCategory) {
-      generateCodeSuggestions(formData.category);
-    }
-  }, [formData.category]);
 
   const fetchCategories = async () => {
     try {
@@ -120,20 +82,15 @@ export default function ProductForm({ product, onSuccess, existingCategories = [
     }
   };
 
-  const generateCodeSuggestions = (category: string) => {
-    const suggestions = [
-      generateProductCode(),
-      generatePersianProductCode(),
-      generateSimpleProductCode(),
-      generateCategoryBasedCode(category),
-      `محصول-${Date.now().toString().slice(-6)}`,
-    ];
-    setSuggestedCodes(suggestions);
-    
-    // اگر کد خالی است، اولین پیشنهاد را قرار بده
-    if (!formData.code.trim()) {
-      setFormData(prev => ({ ...prev, code: suggestions[0] }));
-    }
+  const formatPrice = (value: string) => {
+    // حذف غیراعداد
+    const num = value.replace(/[^\d]/g, '');
+    // فرمت با کاما
+    return num ? parseInt(num).toLocaleString('en-US') : '';
+  };
+
+  const parsePrice = (value: string) => {
+    return value.replace(/,/g, '');
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -141,14 +98,19 @@ export default function ProductForm({ product, onSuccess, existingCategories = [
     
     if (name === "category" && value === "new") {
       setShowNewCategory(true);
+      setFormData(prev => ({ ...prev, category: "" }));
     } else if (name === "category" && value !== "new") {
       setShowNewCategory(false);
+      setFormData(prev => ({ ...prev, [name]: value }));
+    } else if (name === "price" || name === "shippingCost") {
+      const formattedValue = formatPrice(value);
+      setFormData(prev => ({ ...prev, [name]: formattedValue }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value
+      }));
     }
-    
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value
-    }));
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,7 +122,6 @@ export default function ProductForm({ product, onSuccess, existingCategories = [
 
     setImages(prev => [...prev, ...files]);
     
-    // ایجاد پیش‌نمایش
     files.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -172,7 +133,6 @@ export default function ProductForm({ product, onSuccess, existingCategories = [
 
   const removeImage = (index: number) => {
     if (imagePreviews[index].startsWith("data:")) {
-      // حذف فایل جدید
       setImages(prev => prev.filter((_, i) => i !== index - (imagePreviews.length - images.length)));
     }
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
@@ -197,124 +157,75 @@ export default function ProductForm({ product, onSuccess, existingCategories = [
     setShowNewCategory(false);
   };
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(formData.code);
-    toast.success("کد محصول کپی شد");
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-  const handleUseSuggestedCode = (suggestedCode: string) => {
-    setFormData(prev => ({ ...prev, code: suggestedCode }));
-    toast.success("کد پیشنهادی انتخاب شد");
-  };
-
-  const handleGenerateNewSuggestions = () => {
-    generateCodeSuggestions(formData.category);
-    toast.success("پیشنهادات جدید تولید شدند");
-  };
-
-// components/ProductForm.tsx (قسمت handleSubmit)
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
-
-  try {
-    const formDataToSend = new FormData();
-    formDataToSend.append("code", formData.code.trim());
-    formDataToSend.append("title", formData.title);
-    formDataToSend.append("description", formData.description);
-    formDataToSend.append("price", formData.price);
-    formDataToSend.append("category", showNewCategory ? formData.newCategory : formData.category);
-    formDataToSend.append("inStock", formData.inStock.toString());
-    
-    // اضافه کردن تصاویر
-    images.forEach((image, index) => {
-      formDataToSend.append(`image${index}`, image);
-    });
-
-    // اگر در حال ویرایش هستیم و تصاویر قبلی داریم
-    if (product) {
-      imagePreviews.forEach((preview, index) => {
-        if (!preview.startsWith("data:")) {
-          formDataToSend.append("existingImages", preview);
-        }
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("code", formData.code.trim());
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("price", parsePrice(formData.price) || "0");
+      formDataToSend.append("shippingCost", parsePrice(formData.shippingCost) || "0");
+      formDataToSend.append("category", showNewCategory ? formData.newCategory : formData.category);
+      formDataToSend.append("inStock", formData.inStock.toString());
+      
+      images.forEach((image, index) => {
+        formDataToSend.append(`image${index}`, image);
       });
-    }
 
-    const url = product ? `/api/products/${product.id}` : "/api/products";
-    const method = product ? "PUT" : "POST";
-
-    const response = await fetch(url, {
-      method,
-      body: formDataToSend,
-    });
-
-    // بررسی وجود response
-    if (!response) {
-      throw new Error("پاسخ از سرور دریافت نشد");
-    }
-
-    // بررسی وضعیت response
-    if (response.ok) {
-      let result;
-      try {
-        const text = await response.text();
-        result = text ? JSON.parse(text) : {};
-      } catch (parseError) {
-        console.warn("خطا در parsing پاسخ:", parseError);
-        result = {};
+      if (product) {
+        imagePreviews.forEach((preview, index) => {
+          if (!preview.startsWith("data:")) {
+            formDataToSend.append("existingImages", preview);
+          }
+        });
       }
-      
-      // ذخیره دسته‌بندی جدید
-      const selectedCategory = showNewCategory ? formData.newCategory : formData.category;
-      if (selectedCategory && !categories.includes(selectedCategory)) {
-        try {
-          await fetch("/api/categories", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ category: selectedCategory }),
-          });
-        } catch (categoryError) {
-          console.error("خطا در ذخیره دسته‌بندی:", categoryError);
-          // خطا در ذخیره دسته‌بندی نباید فرآیند اصلی را متوقف کند
+
+      const url = product ? `/api/products/${product.id}` : "/api/products";
+      const method = product ? "PUT" : "POST";
+
+      const response = await fetch(url, { method, body: formDataToSend });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        const selectedCategory = showNewCategory ? formData.newCategory : formData.category;
+        if (selectedCategory && !categories.includes(selectedCategory)) {
+          try {
+            await fetch("/api/categories", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ category: selectedCategory }),
+            });
+          } catch (error) {
+            console.error("خطا در ذخیره دسته‌بندی:", error);
+          }
         }
-      }
 
-      toast.success(product ? "محصول به‌روزرسانی شد!" : "محصول اضافه شد!");
-      resetForm();
-      onSuccess();
-    } else {
-      // مدیریت خطا
-      let errorData;
-      try {
-        const errorText = await response.text();
-        errorData = errorText ? JSON.parse(errorText) : { error: "خطای ناشناخته" };
-      } catch (parseError) {
-        console.error("خطا در parsing خطا:", parseError);
-        errorData = { 
-          error: `خطای ${response.status}: ${response.statusText || "خطای سرور"}` 
-        };
-      }
-      
-      // اگر خطای تکراری بودن کد بود
-      if (errorData.code === 'P2002' && errorData.meta?.target?.includes('code')) {
-        toast.error("این کد محصول قبلاً استفاده شده است. لطفاً کد دیگری انتخاب کنید.");
+        toast.success(product ? "محصول به‌روزرسانی شد!" : "محصول اضافه شد!");
+        if (!product) resetForm();
+        onSuccess();
       } else {
+        const errorData = await response.json();
         toast.error(errorData.error || errorData.message || "خطایی رخ داد");
       }
+    } catch (error) {
+      console.error("خطا در ذخیره محصول:", error);
+      toast.error(error instanceof Error ? error.message : "ذخیره محصول ناموفق بود");
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.error("خطا در ذخیره محصول:", error);
-    toast.error(error instanceof Error ? error.message : "ذخیره محصول ناموفق بود");
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
+
   const resetForm = () => {
     setFormData({
-      code: generateProductCode(),
+      code: "",
       title: "",
       description: "",
       price: "",
+      shippingCost: "",
       category: "",
       newCategory: "",
       inStock: true,
@@ -322,7 +233,6 @@ const handleSubmit = async (e: React.FormEvent) => {
     setImages([]);
     setImagePreviews([]);
     setShowNewCategory(false);
-    generateCodeSuggestions("");
   };
 
   return (
@@ -332,30 +242,17 @@ const handleSubmit = async (e: React.FormEvent) => {
         <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
           <FiPackage className="text-blue-500" />
           کد محصول (اختیاری)
-
-
         </label>
-        
-        {/* فیلد ورود کد */}
-        <div className="mb-4">
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              name="code"
-              value={formData.code}
-              onChange={handleInputChange}
-              className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              placeholder="کد محصول را وارد کنید (اختیاری)"
-              dir="auto"
-              maxLength={50}
-            />
-
-          </div>
-
-        </div>
-
-   
-
+        <input
+          type="text"
+          name="code"
+          value={formData.code}
+          onChange={handleInputChange}
+          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          placeholder="کد محصول را وارد کنید (اختیاری)"
+          dir="auto"
+          maxLength={50}
+        />
       </div>
 
       {/* عنوان محصول */}
@@ -392,73 +289,96 @@ const handleSubmit = async (e: React.FormEvent) => {
         />
       </div>
 
-      {/* قیمت و دسته‌بندی */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* قیمت‌ها */}
+      <div className="grid grid-cols-1  gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            قیمت (تومان) *
+            قیمت محصول (تومان) *
           </label>
           <div className="relative">
             <input
-              type="number"
+              type="text"
               name="price"
               value={formData.price}
               onChange={handleInputChange}
               required
-              min="0"
-              step="1000"
-              className="w-full px-4 py-3 pl-12 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              
+              className="w-full px-4 py-3 pl-12 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-left"
               dir="ltr"
+              placeholder="0"
             />
-      
+ 
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            دسته‌بندی *
+          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+            <FiTruck className="text-gray-500" />
+            هزینه ارسال (تومان)
+            <span className="text-xs text-gray-500">(اختیاری)</span>
           </label>
-          <div className="space-y-2">
-            <select
-              name="category"
-              value={formData.category}
+          <div className="relative">
+            <input
+              type="text"
+              name="shippingCost"
+              value={formData.shippingCost}
               onChange={handleInputChange}
-              required={!showNewCategory}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              dir="rtl"
-            >
-              <option value="">انتخاب دسته‌بندی</option>
-              {categories.map((category, index) => (
-                <option key={index} value={category}>
-                  {category}
-                </option>
-              ))}
-              <option value="new">+ ایجاد دسته‌بندی جدید</option>
-            </select>
-            
-            {showNewCategory && (
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  name="newCategory"
-                  value={formData.newCategory}
-                  onChange={handleInputChange}
-                  className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder="نام دسته‌بندی "
-                  dir="rtl"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddCategory}
-                  className="px-4 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors flex items-center gap-2"
-                >
-                  <FiPlus />
-                  
-                </button>
-              </div>
-            )}
+              className="w-full px-4 py-3 pl-12 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-left"
+              dir="ltr"
+              placeholder="0 (رایگان)"
+            />
+      
           </div>
+          <p className="text-xs text-gray-500 mt-1">
+            اگر وارد نکنید، ارسال رایگان خواهد بود
+          </p>
+        </div>
+      </div>
+
+      {/* دسته‌بندی */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          دسته‌بندی *
+        </label>
+        <div className="space-y-2">
+          <select
+            name="category"
+            value={formData.category}
+            onChange={handleInputChange}
+            required={!showNewCategory}
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            dir="rtl"
+          >
+            <option value="">انتخاب دسته‌بندی</option>
+            {categories.map((category, index) => (
+              <option key={index} value={category}>
+                {category}
+              </option>
+            ))}
+            <option value="new">+ ایجاد دسته‌بندی جدید</option>
+          </select>
+          
+          {showNewCategory && (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                name="newCategory"
+                value={formData.newCategory}
+                onChange={handleInputChange}
+                required
+                className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                placeholder="نام دسته‌بندی جدید"
+                dir="rtl"
+              />
+              <button
+                type="button"
+                onClick={handleAddCategory}
+                className="px-4 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors flex items-center gap-2"
+              >
+                <FiPlus />
+                اضافه
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -473,7 +393,6 @@ const handleSubmit = async (e: React.FormEvent) => {
         <label className="relative inline-flex items-center cursor-pointer">
           <input
             type="checkbox"
-            id="inStock"
             name="inStock"
             checked={formData.inStock}
             onChange={handleInputChange}
@@ -592,21 +511,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           {product && (
             <button
               type="button"
-              onClick={() => {
-                setFormData({
-                  code: generateProductCode(),
-                  title: "",
-                  description: "",
-                  price: "",
-                  category: "",
-                  newCategory: "",
-                  inStock: true,
-                });
-                setImages([]);
-                setImagePreviews([]);
-                setShowNewCategory(false);
-                generateCodeSuggestions("");
-              }}
+              onClick={resetForm}
               className="py-3.5 px-6 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
             >
               محصول جدید

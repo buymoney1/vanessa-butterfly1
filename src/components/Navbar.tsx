@@ -2,14 +2,37 @@
 
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react"; // اضافه شده برای منوی موبایل
+import { useRouter } from "next/navigation"; // اضافه شده
+import { useState } from "react";
 import { FiHome, FiShoppingBag, FiUser, FiLogOut, FiMenu, FiX, FiPlus } from "react-icons/fi";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const router = useRouter(); // اضافه شده
   
   const isAdmin = session?.user?.role === "ADMIN";
+
+  // تابع کمکی برای بستن منو و ناوبری
+  const handleMobileLinkClick = (e, href) => {
+    e.preventDefault();
+    setIsMobileMenuOpen(false);
+    
+    // تاخیر کوتاه برای بسته شدن انیمیشن منو قبل از ناوبری
+    setTimeout(() => {
+      router.push(href);
+    }, 200); // 200ms برای انیمیشن بسته شدن
+  };
+
+  // تابع کمکی برای خروج
+  const handleSignOut = async (e) => {
+    e.preventDefault();
+    setIsMobileMenuOpen(false);
+    
+    setTimeout(() => {
+      signOut({ callbackUrl: "/" });
+    }, 200);
+  };
 
   // لودینگ بسیار مینیمال
   if (status === "loading") {
@@ -114,17 +137,29 @@ export default function Navbar() {
       {/* منوی موبایل (پنهان/آشکار) */}
       {isMobileMenuOpen && (
         <div className="absolute top-20 left-0 w-full bg-white border-b border-gray-100 p-6 flex flex-col gap-4 md:hidden shadow-xl animate-in slide-in-from-top-2">
-          <Link href="/" className="text-base font-medium text-gray-900 py-2" onClick={() => setIsMobileMenuOpen(false)}>صفحه اصلی</Link>
+          {/* استفاده از دکمه‌ها به جای لینک‌ها برای جلوگیری از ریلود */}
+          <button 
+            onClick={(e) => handleMobileLinkClick(e, "/")}
+            className="text-right text-base font-medium text-gray-900 py-2 hover:text-black transition-colors"
+          >
+            صفحه اصلی
+          </button>
           
           {isAdmin && (
-            <Link href="/admin" className="text-base font-medium text-purple-600 py-2 flex items-center gap-2">
+            <button 
+              onClick={(e) => handleMobileLinkClick(e, "/admin")}
+              className="justify-start text-right text-base font-medium text-purple-600 py-2 flex items-center justify-end gap-2 hover:text-purple-700 transition-colors"
+            >
               <FiPlus /> پنل مدیریت
-            </Link>
+            </button>
           )}
 
-          <Link href="/cart" className="text-base font-medium text-gray-900 py-2 flex items-center gap-2">
+          <button 
+            onClick={(e) => handleMobileLinkClick(e, "/cart")}
+            className="justify-start text-right text-base font-medium text-gray-900 py-2 flex items-center justify-end gap-2 hover:text-black transition-colors"
+          >
             <FiShoppingBag /> سبد خرید
-          </Link>
+          </button>
 
           <div className="h-px bg-gray-100 my-2"></div>
 
@@ -140,16 +175,26 @@ export default function Navbar() {
                 </div>
               </div>
               <button
-                onClick={() => { signOut({ callbackUrl: "/" }); setIsMobileMenuOpen(false); }}
-                className="w-full text-center py-3 rounded-lg bg-red-50 text-red-600 font-medium"
+                onClick={handleSignOut}
+                className="w-full text-right py-3 rounded-lg bg-red-50 text-red-600 font-medium hover:bg-red-100 transition-colors"
               >
                 خروج از حساب
               </button>
             </>
           ) : (
             <div className="flex flex-col gap-3">
-              <Link href="/login" className="w-full text-center py-3 rounded-lg border border-gray-200 font-medium" onClick={() => setIsMobileMenuOpen(false)}>ورود</Link>
-              <Link href="/login?register=true" className="w-full text-center py-3 rounded-lg bg-black text-white font-medium" onClick={() => setIsMobileMenuOpen(false)}>ثبت‌نام</Link>
+              <button 
+                onClick={(e) => handleMobileLinkClick(e, "/login")}
+                className="w-full text-right py-3 rounded-lg border border-gray-200 font-medium hover:bg-gray-50 transition-colors"
+              >
+                ورود
+              </button>
+              <button 
+                onClick={(e) => handleMobileLinkClick(e, "/login?register=true")}
+                className="w-full text-right py-3 rounded-lg bg-black text-white font-medium hover:bg-gray-800 transition-colors"
+              >
+                ثبت‌نام
+              </button>
             </div>
           )}
         </div>

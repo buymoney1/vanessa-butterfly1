@@ -1,3 +1,4 @@
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -16,6 +17,7 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   cartItems     CartItem[]
+  trainedFAQs   FAQ[]     @relation("TrainedFAQs")
 }
 
 enum Role {
@@ -29,6 +31,7 @@ model Product {
   title       String
   description String
   price       Float
+  shippingCost Float   @default(0)
   images      String[]
   category    String
   inStock     Boolean  @default(true)
@@ -47,4 +50,25 @@ model CartItem {
   createdAt DateTime @default(now())
 
   @@unique([userId, productId])
+}
+
+model FAQ {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  question  String
+  answer    String
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?  @db.ObjectId
+  creator   User?    @relation("TrainedFAQs", fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([order])      // برای مرتب‌سازی
+  @@index([isActive])   // برای فیلتر کردن
+  @@index([createdAt])  // برای مرتب‌سازی زمانی
+  @@fulltext([question, answer], map: "faq_search_index") // برای جستجوی متنی
+  
+  // Compound index برای کوئری‌های رایج
+  @@index([isActive, order])
+  @@index([createdBy, isActive])
 }
