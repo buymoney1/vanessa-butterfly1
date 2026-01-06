@@ -1,40 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from '@prisma/client';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
-
-const prisma = new PrismaClient();
-
-// ایجاد پوشه uploads اگر وجود ندارد
-const createUploadsDir = () => {
-  const uploadsDir = join(process.cwd(), 'public', 'uploads');
-  if (!existsSync(uploadsDir)) {
-    mkdirSync(uploadsDir, { recursive: true });
-  }
-  return uploadsDir;
-};
-
-// ذخیره فایل و برگرداندن آدرس
-const saveFile = async (file: File): Promise<string> => {
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-  
-  // ایجاد نام فایل منحصربه‌فرد
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(7);
-  const originalName = file.name.replace(/\s+/g, '-');
-  const filename = `${timestamp}-${random}-${originalName}`;
-  
-  // ذخیره فایل
-  const uploadsDir = createUploadsDir();
-  const path = join(uploadsDir, filename);
-  
-  await writeFile(path, buffer);
-  
-  // برگرداندن آدرس نسبی
-  return `/uploads/${filename}`;
-};
+import { prisma } from "../../../../lib/prisma";
+import { saveFileToGridFS } from "../../../../lib/gridfs";
 
 export async function GET(request: NextRequest) {
   try {
@@ -181,7 +147,7 @@ export async function POST(request: NextRequest) {
     }
 
     // آپلود تصاویر
-    const imageUrls: string[] = [];
+    const imageIds: string[] = [];
     const files: File[] = [];
     
     // پیدا کردن تمام فایل‌ها
@@ -194,16 +160,16 @@ export async function POST(request: NextRequest) {
     // آپلود همه تصاویر
     for (const file of files) {
       try {
-        const imageUrl = await saveFile(file);
-        imageUrls.push(imageUrl);
+        const imageId = await saveFileToGridFS(file);
+        imageIds.push(imageId);
       } catch (error) {
         console.error("خطا در آپلود تصویر:", error);
       }
     }
     
-    // اگر تصویری آپلود نشده، از تصویر پیش‌فرض استفاده کن
-    if (imageUrls.length === 0) {
-      imageUrls.push("/placeholder.jpg");
+    // اگر تصویری آپلود نشده
+    if (imageIds.length === 0) {
+      imageIds.push('placeholder');
     }
 
     // ایجاد محصول جدید
@@ -215,7 +181,7 @@ export async function POST(request: NextRequest) {
         price,
         category,
         inStock,
-        images: imageUrls,
+        images: imageIds,
       },
     });
 

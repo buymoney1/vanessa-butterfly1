@@ -1,36 +1,6 @@
-// app/api/products/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../../../../lib/prisma";
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
-
-// ایجاد پوشه uploads
-const createUploadsDir = () => {
-  const uploadsDir = join(process.cwd(), 'public', 'uploads');
-  if (!existsSync(uploadsDir)) {
-    mkdirSync(uploadsDir, { recursive: true });
-  }
-  return uploadsDir;
-};
-
-// ذخیره فایل
-const saveFile = async (file: File): Promise<string> => {
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-  
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(7);
-  const originalName = file.name.replace(/\s+/g, '-');
-  const filename = `${timestamp}-${random}-${originalName}`;
-  
-  const uploadsDir = createUploadsDir();
-  const path = join(uploadsDir, filename);
-  
-  await writeFile(path, buffer);
-  
-  return `/uploads/${filename}`;
-};
+import { deleteFileFromGridFS, saveFileToGridFS } from "../../../../../lib/gridfs";
 
 // GET - دریافت یک محصول
 export async function GET(
@@ -125,8 +95,17 @@ export async function PUT(
       }
     });
     
+    // حذف عکس‌هایی که باید حذف شوند
+    const imagesToDelete = existingProduct.images.filter(img => 
+      !existingImages.includes(img) && img !== 'placeholder'
+    );
+    
+    for (const imageId of imagesToDelete) {
+      await deleteFileFromGridFS(imageId);
+    }
+    
     // آپلود تصاویر جدید
-    const newImageUrls: string[] = [];
+    const newImageIds: string[] = [];
     const files: File[] = [];
     
     for (const [key, value] of formData.entries()) {
@@ -137,18 +116,18 @@ export async function PUT(
     
     for (const file of files) {
       try {
-        const imageUrl = await saveFile(file);
-        newImageUrls.push(imageUrl);
+        const imageId = await saveFileToGridFS(file);
+        newImageIds.push(imageId);
       } catch (error) {
         console.error("خطا در آپلود تصویر:", error);
       }
     }
     
     // ترکیب تصاویر
-    const allImages = [...existingImages, ...newImageUrls];
+    const allImages = [...existingImages, ...newImageIds];
     let finalImages = allImages.length > 0 ? allImages : existingProduct.images;
     if (finalImages.length === 0) {
-      finalImages = ["/placeholder.jpg"];
+      finalImages = ['placeholder'];
     }
 
     // آپدیت محصول
@@ -170,7 +149,6 @@ export async function PUT(
   } catch (error) {
     console.error("خطا در آپدیت محصول:", error);
     
-    // مدیریت خطاهای Prisma
     if (error instanceof Error && 'code' in error) {
       const prismaError = error as any;
       if (prismaError.code === 'P2002') {
@@ -223,14 +201,21 @@ export async function DELETE(
       );
     }
 
-    // 1. اول همه آیتم‌های سبد خرید مرتبط را حذف کنید
+    // حذف عکس‌های محصول از GridFS
+    for (const imageId of existingProduct.images) {
+      if (imageId !== 'placeholder') {
+        await deleteFileFromGridFS(imageId);
+      }
+    }
+
+    // حذف آیتم‌های سبد خرید مرتبط
     const deletedCartItems = await prisma.cartItem.deleteMany({
       where: {
         productId: id
       }
     });
 
-    // 2. سپس محصول را حذف کنید
+    // حذف محصول
     await prisma.product.delete({
       where: { id },
     });

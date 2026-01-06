@@ -16,6 +16,7 @@
     "bcryptjs": "^3.0.3",
     "framer-motion": "^12.23.27",
     "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.0.0",
     "multer": "^2.0.2",
     "next": "16.1.1",
     "next-auth": "^4.24.13",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/mongodb": "^4.0.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

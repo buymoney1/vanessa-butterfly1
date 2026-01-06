@@ -82,22 +82,42 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
     });
   };
 
+  // تابع تصحیح شده برای تبدیل ObjectId به URL
+  const getImageUrl = (imageId: string): string => {
+    if (!imageId || imageId === 'placeholder') {
+      return '/placeholder.jpg';
+    }
+    
+    // اگر قبلاً URL کامل است
+    if (imageId.startsWith('http') || imageId.startsWith('https')) {
+      return imageId;
+    }
+    
+    // اگر مسیر نسبی است
+    if (imageId.startsWith('/')) {
+      return imageId;
+    }
+    
+    // اگر ObjectId است، به endpoint فایل‌ها لینک بده
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+    if (baseUrl) {
+      return `${baseUrl}/api/files/${imageId}`;
+    }
+    
+    // در حالت توسعه
+    return `/api/files/${imageId}`;
+  };
+
   // پیش‌لود تصاویر
   useEffect(() => {
-    images.forEach((src, index) => {
+    images.forEach((imageId, index) => {
+      const url = getImageUrl(imageId);
       const img = new Image();
-      img.src = getImageUrl(src);
+      img.src = url;
       img.onload = () => handleImageLoad(index);
       img.onerror = () => handleImageError(index);
     });
   }, [images]);
-
-  const getImageUrl = (imagePath: string) => {
-    if (!imagePath) return "/placeholder.jpg";
-    if (imagePath.startsWith('/')) return imagePath;
-    if (imagePath.startsWith('http')) return imagePath;
-    return `/${imagePath.replace(/^\//, '')}`;
-  };
 
   return (
     <div className="space-y-6">
@@ -183,7 +203,7 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
       {/* گالری کوچک تصاویر */}
       {images.length > 1 && (
         <div className="grid grid-cols-5 gap-2">
-          {images.map((image, index) => (
+          {images.map((imageId, index) => (
             <button
               key={index}
               onClick={() => handleThumbnailClick(index)}
@@ -201,7 +221,7 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
               )}
               
               <img
-                src={getImageUrl(image)}
+                src={getImageUrl(imageId)}
                 alt={`تصویر ${index + 1}`}
                 className={`w-full h-full object-cover transition-opacity duration-300 ${
                   imageLoaded[index] ? 'opacity-100' : 'opacity-0'
@@ -298,7 +318,7 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
           {images.length > 1 && (
             <div className="absolute bottom-0 left-0 right-0 z-20 p-4 bg-gradient-to-t from-black/80 to-transparent">
               <div className="flex justify-center space-x-2 overflow-x-auto py-2">
-                {images.map((image, index) => (
+                {images.map((imageId, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
@@ -315,7 +335,7 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
                     )}
                     
                     <img
-                      src={getImageUrl(image)}
+                      src={getImageUrl(imageId)}
                       alt={`تصویر ${index + 1}`}
                       className={`w-full h-full object-cover transition-opacity duration-300 ${
                         imageLoaded[index] ? 'opacity-100' : 'opacity-0'

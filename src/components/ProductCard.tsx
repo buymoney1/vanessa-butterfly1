@@ -14,7 +14,7 @@ interface ProductCardProps {
     title: string;
     description: string;
     price: number;
-    images: string[];
+    images: string[]; // اینجا ObjectIdهای GridFS هستند
     category: string;
     inStock: boolean;
     code?: string;
@@ -24,6 +24,22 @@ interface ProductCardProps {
   onDelete?: () => void;
 }
 
+// تابع برای تبدیل ObjectId به URL
+function getImageUrl(imageId: string): string {
+  if (!imageId || imageId === 'placeholder') {
+    return '/placeholder.jpg';
+  }
+  
+  // بررسی اینکه آیا imageId یک URL کامل هست یا نه
+  if (imageId.startsWith('http') || imageId.startsWith('/')) {
+    return imageId;
+  }
+  
+  // اگر ObjectId هست، به endpoint فایل‌ها لینک بده
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+  return `${baseUrl}/api/files/${imageId}`;
+}
+
 export default function ProductCard({ product, isAdmin, onEdit, onDelete }: ProductCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -31,6 +47,11 @@ export default function ProductCard({ product, isAdmin, onEdit, onDelete }: Prod
   const [isLiked, setIsLiked] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
+
+  // تبدیل imageId به URL
+  const imageUrl = product.images[currentImageIndex] 
+    ? getImageUrl(product.images[currentImageIndex])
+    : '/placeholder.jpg';
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -203,11 +224,12 @@ export default function ProductCard({ product, isAdmin, onEdit, onDelete }: Prod
         
         {/* Product Image */}
         <Image
-          src={product.images[currentImageIndex] || '/placeholder.jpg'}
+          src={imageUrl}
           alt={product.title}
           fill
           className={`object-cover transition-all duration-700 ${isHovered ? 'scale-110 rotate-1' : 'scale-100'}`}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+          unoptimized={imageUrl.includes('/api/files/')} // برای URLهای API از optimization استفاده نکن
         />
 
         {/* Quick Actions Overlay */}
