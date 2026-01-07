@@ -9,7 +9,7 @@ interface Product {
   price: number;
   shippingCost: number;
   images: string[];
-  code?: string;
+  code?: string | null;
   category: string;
   inStock: boolean;
 }

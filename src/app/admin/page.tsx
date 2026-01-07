@@ -355,7 +355,7 @@ export default function AdminPage() {
                   toast.success(editingProduct ? "محصول ویرایش شد" : "محصول اضافه شد");
                 }}
                 existingCategories={categories}
-                isMobile
+             
               />
             </div>
           </div>
