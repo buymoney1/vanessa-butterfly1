@@ -44,18 +44,35 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
+    <nav className="fixed top-0 left-0 right-0 z-50 h-15 sm:h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
       <div className="container mx-auto px-6 h-full flex justify-between items-center">
         
-        {/* لوگو */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
-            <span className="font-bold text-lg">V</span>
-          </div>
-          <span className="font-bold text-xl tracking-tight text-gray-900 hidden sm:block">
-            Vanessa<span className="text-gray-400 font-light">Butterfly</span>
-          </span>
-        </Link>
+{/* لوگو */}
+<Link href="/" className="flex items-center gap-1 group">
+  <div className="w-8 h-8 bg-transparent rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+    <img 
+      src="/favicon.ico" 
+      alt="VanessaButterfly Logo" 
+      className="w-full h-full object-contain"
+      onError={(e) => {
+        // اگر favicon لود نشد، از لوگوی متنی استفاده کنیم
+        e.currentTarget.style.display = 'none';
+        const fallback = e.currentTarget.parentElement;
+        if (fallback) {
+          fallback.innerHTML = '<span class="font-bold text-lg text-black">V</span>';
+          fallback.classList.remove('bg-transparent');
+          fallback.classList.add('bg-black', 'text-white');
+        }
+      }}
+    />
+  </div>
+  <span className="font-bold text-xl tracking-tight text-gray-900 hidden sm:block">
+    Vanessa<span className="text-gray-400 font-light">Butterfly</span>
+  </span>
+  <span className="font-bold text-sm tracking-tight text-gray-900  sm:hidden">
+    Vanessa<span className="text-gray-400 font-light">Butterfly</span>
+  </span>
+</Link>
 
         {/* منوی دسکتاپ */}
         <div className="hidden md:flex items-center gap-8">
