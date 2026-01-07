@@ -360,7 +360,7 @@ export default function ProductCard({ product, isAdmin, onEdit, onDelete }: Prod
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
               <span className="text-xl font-bold text-gray-900 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                {formatPrice(getFinalPrice())}
+                {formatPrice(product.price)}
                 <span className="text-sm font-normal text-gray-500 mr-1">تومان</span>
               </span>
               {product.code && (

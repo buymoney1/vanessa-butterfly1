@@ -216,30 +216,30 @@ const handleUpdateFAQ = async (faq: FAQ) => {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       {/* هدر */}
-      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-            <FiHelpCircle className="text-blue-500" size={20} />
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+            <FiHelpCircle className="text-blue-500" size={18} />
           </div>
-          <div>
-            <h2 className="font-bold text-gray-900 text-lg">مدیریت سوالات متداول</h2>
-            <p className="text-sm text-gray-500">سوالات پرتکرار و پاسخ‌های آنها</p>
+          <div className="flex-1 sm:flex-auto">
+            <h2 className="font-bold text-gray-900 text-base sm:text-lg">مدیریت سوالات متداول</h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">سوالات پرتکرار و پاسخ‌های آنها</p>
           </div>
         </div>
         <button
           onClick={() => setIsAdding(!isAdding)}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+          className="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
         >
-          <FiPlus size={18} />
-          سوال جدید
+          <FiPlus size={16} />
+          <span>سوال جدید</span>
         </button>
       </div>
 
       {/* فرم افزودن جدید */}
       {isAdding && (
-        <div className="px-6 py-4 border-b border-gray-100 bg-blue-50/50">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-100 bg-blue-50/50">
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -249,7 +249,7 @@ const handleUpdateFAQ = async (faq: FAQ) => {
                 type="text"
                 value={newFAQ.question}
                 onChange={(e) => setNewFAQ({ ...newFAQ, question: e.target.value })}
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm sm:text-base"
                 placeholder="سوال متداول را وارد کنید"
                 dir="rtl"
               />
@@ -262,13 +262,13 @@ const handleUpdateFAQ = async (faq: FAQ) => {
                 value={newFAQ.answer}
                 onChange={(e) => setNewFAQ({ ...newFAQ, answer: e.target.value })}
                 rows={3}
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none text-sm sm:text-base"
                 placeholder="پاسخ کامل را وارد کنید"
                 dir="rtl"
               />
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -279,22 +279,22 @@ const handleUpdateFAQ = async (faq: FAQ) => {
                   <span className="text-sm text-gray-700">فعال</span>
                 </label>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <button
                   onClick={() => {
                     setIsAdding(false);
                     setNewFAQ({ question: "", answer: "", isActive: true });
                   }}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
                 >
                   انصراف
                 </button>
                 <button
                   onClick={handleAddFAQ}
-                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
                   <FiSave size={16} />
-                  ذخیره سوال
+                  <span>ذخیره سوال</span>
                 </button>
               </div>
             </div>
@@ -305,20 +305,20 @@ const handleUpdateFAQ = async (faq: FAQ) => {
       {/* لیست سوالات */}
       <div className="divide-y divide-gray-100">
         {faqs.length === 0 ? (
-          <div className="px-6 py-12 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-              <FiHelpCircle className="text-gray-400" size={24} />
+          <div className="px-4 sm:px-6 py-8 sm:py-12 text-center">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+              <FiHelpCircle className="text-gray-400" size={20} />
             </div>
-            <h3 className="text-gray-900 font-medium mb-2">هنوز سوالی اضافه نشده است</h3>
-            <p className="text-gray-500 text-sm">
+            <h3 className="text-gray-900 font-medium text-sm sm:text-base mb-1.5 sm:mb-2">هنوز سوالی اضافه نشده است</h3>
+            <p className="text-gray-500 text-xs sm:text-sm">
               اولین سوال متداول را با کلیک بر روی دکمه "سوال جدید" اضافه کنید
             </p>
           </div>
         ) : (
           faqs.map((faq) => (
-            <div key={faq.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+            <div key={faq.id} className="px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50 transition-colors">
               {editingId === faq.id ? (
-                // حالت ویرایش
+                // حالت ویرایش - موبایل
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -333,7 +333,7 @@ const handleUpdateFAQ = async (faq: FAQ) => {
                         );
                         setFaqs(updatedFaqs);
                       }}
-                      className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm sm:text-base"
                       dir="rtl"
                     />
                   </div>
@@ -350,12 +350,13 @@ const handleUpdateFAQ = async (faq: FAQ) => {
                         setFaqs(updatedFaqs);
                       }}
                       rows={3}
-                      className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none text-sm sm:text-base"
                       dir="rtl"
                     />
                   </div>
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="flex items-center gap-4">
+                  
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center justify-between w-full sm:w-auto">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
@@ -370,54 +371,113 @@ const handleUpdateFAQ = async (faq: FAQ) => {
                         />
                         <span className="text-sm text-gray-700">فعال</span>
                       </label>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 sm:hidden">
                         <button
                           onClick={() => handleReorder(faq.id, 'up')}
-                          className="p-1 text-gray-500 hover:text-gray-700"
+                          className="p-1.5 text-gray-500 hover:text-gray-700 bg-gray-100 rounded-lg"
                           disabled={faqs.findIndex(f => f.id === faq.id) === 0}
                         >
-                          <FiChevronUp size={18} />
+                          <FiChevronUp size={14} />
                         </button>
                         <button
                           onClick={() => handleReorder(faq.id, 'down')}
-                          className="p-1 text-gray-500 hover:text-gray-700"
+                          className="p-1.5 text-gray-500 hover:text-gray-700 bg-gray-100 rounded-lg"
                           disabled={faqs.findIndex(f => f.id === faq.id) === faqs.length - 1}
                         >
-                          <FiChevronDown size={18} />
+                          <FiChevronDown size={14} />
                         </button>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    
+                    <div className="flex items-center gap-2 sm:gap-1 hidden sm:flex">
+                      <button
+                        onClick={() => handleReorder(faq.id, 'up')}
+                        className="p-1.5 text-gray-500 hover:text-gray-700"
+                        disabled={faqs.findIndex(f => f.id === faq.id) === 0}
+                      >
+                        <FiChevronUp size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleReorder(faq.id, 'down')}
+                        className="p-1.5 text-gray-500 hover:text-gray-700"
+                        disabled={faqs.findIndex(f => f.id === faq.id) === faqs.length - 1}
+                      >
+                        <FiChevronDown size={16} />
+                      </button>
+                    </div>
+                    
+                    <div className="flex flex-row sm:flex-row gap-2 w-full sm:w-auto">
                       <button
                         onClick={() => setEditingId(null)}
-                        className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                        className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                       >
                         انصراف
                       </button>
                       <button
                         onClick={() => handleUpdateFAQ(faq)}
-                        className="px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm flex items-center gap-2"
+                        className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm flex items-center justify-center gap-1.5"
                       >
                         <FiSave size={14} />
-                        ذخیره تغییرات
+                        <span>ذخیره</span>
                       </button>
                     </div>
                   </div>
                 </div>
               ) : (
-                // حالت نمایش
+                // حالت نمایش - موبایل
                 <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 text-lg mb-2 flex items-center gap-2">
-                        <span className="text-blue-500">Q:</span>
-                        {faq.question}
-                      </h3>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-gray-700 leading-relaxed">{faq.answer}</p>
+                  <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+                    <div className="flex-1 w-full">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <h3 className="font-medium text-gray-900 text-sm sm:text-base flex-1 flex items-start gap-1.5">
+                          <span className="text-blue-500 text-xs sm:text-sm mt-0.5">Q:</span>
+                          <span className="text-right leading-relaxed">{faq.question}</span>
+                        </h3>
+                        
+                        {/* دکمه‌های عملیات - موبایل */}
+                        <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 flex-shrink-0">
+                          <div className="flex items-center gap-1 sm:hidden">
+                            <button
+                              onClick={() => handleReorder(faq.id, 'up')}
+                              className="p-1.5 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                              disabled={faqs.findIndex(f => f.id === faq.id) === 0}
+                            >
+                              <FiChevronUp size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleReorder(faq.id, 'down')}
+                              className="p-1.5 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                              disabled={faqs.findIndex(f => f.id === faq.id) === faqs.length - 1}
+                            >
+                              <FiChevronDown size={14} />
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => setEditingId(faq.id)}
+                              className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="ویرایش"
+                            >
+                              <FiEdit2 size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteFAQ(faq.id)}
+                              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              title="حذف"
+                            >
+                              <FiTrash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gray-50 rounded-lg p-3 mt-2">
+                        <p className="text-gray-700 text-sm leading-relaxed text-right">{faq.answer}</p>
                       </div>
                     </div>
-                    <div className="flex flex-col items-center gap-2">
+                    
+                    {/* دکمه‌های عملیات - دسکتاپ */}
+                    <div className="hidden sm:flex flex-col items-center gap-2 flex-shrink-0">
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => handleReorder(faq.id, 'up')}
@@ -452,14 +512,15 @@ const handleUpdateFAQ = async (faq: FAQ) => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <span className={`px-2 py-1 rounded ${faq.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                  
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2 border-t border-gray-100">
+                    <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-500">
+                      <span className={`px-2 py-1 rounded text-xs ${faq.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
                         {faq.isActive ? 'فعال' : 'غیرفعال'}
                       </span>
-                      <span>ترتیب: {faq.order + 1}</span>
+                      <span className="text-gray-600">ترتیب: {faq.order + 1}</span>
                     </div>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-gray-400 text-left sm:text-right">
                       {faq.updatedAt ? new Date(faq.updatedAt).toLocaleDateString('fa-IR') : ''}
                     </div>
                   </div>

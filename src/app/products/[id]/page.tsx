@@ -1,8 +1,10 @@
+// فایل اصلی ProductPage.tsx (سرور کامپوننت)
 import { notFound } from "next/navigation";
 import { FiPackage, FiCheck, FiHome, FiGrid, FiTruck } from "react-icons/fi";
 import { prisma } from "../../../../lib/prisma";
 import AddToCartButton from "@/components/AddToCartButton";
 import ProductGallery from "@/components/ProductGallery";
+import RelatedProducts from "@/components/RelatedProducts"; // کامپوننت جدید
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -203,58 +205,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
 
         {/* محصولات مشابه */}
-        {relatedProducts.length > 0 && (
-          <div className="mt-12 max-w-7xl mx-auto">
-            <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-xl font-bold text-gray-900">محصولات مرتبط</h2>
-              <div className="h-px bg-gray-200 flex-grow"></div>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {relatedProducts.map((relatedProduct) => (
-                <a 
-                  key={relatedProduct.id}
-                  href={`/products/${relatedProduct.id}`}
-                  className="group block bg-white rounded-xl p-3 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-300"
-                >
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-gray-50 mb-3">
-                    <img
-                      src={relatedProduct.images[0] || "/placeholder.jpg"}
-                      alt={relatedProduct.title}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                  </div>
-                  
-                  <div className="px-1 pb-1">
-                    <h3 className="font-bold text-gray-900 text-sm leading-tight mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">
-                      {relatedProduct.title}
-                    </h3>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-900 font-bold text-base">
-                        {relatedProduct.price.toLocaleString()} 
-                        <span className="text-xs font-normal text-gray-500"> تومان</span>
-                      </span>
-                    </div>
-                    {relatedProduct.shippingCost > 0 ? (
-                      <div className="mt-1">
-                        <span className="text-xs text-gray-500">
-                          + {relatedProduct.shippingCost.toLocaleString()} تومان ارسال
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="mt-1">
-                        <span className="text-xs text-green-600">
-                          ✓ ارسال رایگان
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
+        <RelatedProducts products={relatedProducts} />
       </div>
     </div>
   );

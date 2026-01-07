@@ -207,97 +207,102 @@ ${productCodes}
                   item.product.images?.[0] || "/placeholder.jpg";
 
                 return (
-                  <div
-                    key={item.id}
-                    className="bg-white rounded-2xl p-5 border border-gray-100 hover:border-gray-200 transition-colors group"
-                  >
-                    <div className="flex gap-4">
-                      {/* Image */}
-                      <div className="w-24 h-24 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0">
-                        <Image
-                          src={imageUrl}
-                          alt={item.product.title}
-                          width={96}
-                          height={96}
-                          unoptimized
-                          loading="lazy"
-                          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
+<div
+  key={item.id}
+  className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 hover:border-gray-200 transition-colors group"
+>
+  <div className="flex flex-col sm:flex-row gap-4">
+    {/* Image */}
+    <div className="w-full sm:w-24 h-48 sm:h-24 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0">
+      <Image
+        src={imageUrl}
+        alt={item.product.title}
+        width={96}
+        height={96}
+        unoptimized
+        loading="lazy"
+        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+      />
+    </div>
 
-                      {/* Info */}
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-bold text-gray-900 leading-tight mb-1">
-                              {item.product.title}
-                            </h3>
-                            <div className="flex items-center gap-4 mt-2">
-                              <p className="text-gray-500 text-sm font-mono">
-                                {item.product.id?.slice(-6)}
-                              </p>
-                              <p className="text-gray-700 text-sm font-medium">
-                                کد: {item.product.code}
-                              </p>
-                              {(item.product.shippingCost || 0) > 0 ? (
-                                <div className="flex items-center gap-1 text-xs text-gray-500">
-                                  <FiTruck size={12} />
-                                  ارسال:{" "}
-                                  {item.product.shippingCost?.toLocaleString()} تومان
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1 text-xs text-green-600">
-                                  <FiTruck size={12} />
-                                  ارسال رایگان
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => removeItem(item.product.id)}
-                            className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"
-                          >
-                            <FiTrash2 size={18} />
-                          </button>
-                        </div>
+    {/* Info */}
+    <div className="flex-1 w-full">
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
+        <div className="w-full">
+          <h3 className="font-bold text-gray-900 leading-tight mb-2 text-base sm:text-lg">
+            {item.product.title}
+          </h3>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2">
+            <p className="text-gray-500 text-xs sm:text-sm font-mono">
+              {item.product.id?.slice(-6)}
+            </p>
+            <p className="text-gray-700 text-xs sm:text-sm font-medium">
+              کد: {item.product.code}
+            </p>
+            {(item.product.shippingCost || 0) > 0 ? (
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <FiTruck size={12} />
+                ارسال:{" "}
+                {item.product.shippingCost?.toLocaleString()} تومان
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-xs text-green-600">
+                <FiTruck size={12} />
+                ارسال رایگان
+              </div>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={() => removeItem(item.product.id)}
+          className="self-end sm:self-start text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"
+        >
+          <FiTrash2 size={18} />
+        </button>
+      </div>
 
-                        <div className="flex items-center justify-between mt-4">
-                          <div className="text-lg font-bold text-gray-900">
-                            {item.product.price.toLocaleString()} تومان
-                          </div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-4">
+        <div className="text-lg sm:text-xl font-bold text-gray-900 order-2 sm:order-1">
+          {item.product.price.toLocaleString()} تومان
+        </div>
 
-                          <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
-                            <button
-                              disabled={item.quantity <= 1}
-                              onClick={() =>
-                                updateQuantity(
-                                  item.product.id,
-                                  item.quantity - 1
-                                )
-                              }
-                              className="w-10 h-10 flex items-center justify-center text-gray-500 hover:bg-gray-100 disabled:opacity-30"
-                            >
-                              <FiMinus size={16} />
-                            </button>
-                            <span className="w-12 text-center font-medium text-gray-900 text-sm">
-                              {item.quantity}
-                            </span>
-                            <button
-                              onClick={() =>
-                                updateQuantity(
-                                  item.product.id,
-                                  item.quantity + 1
-                                )
-                              }
-                              className="w-10 h-10 flex items-center justify-center text-gray-500 hover:bg-gray-100"
-                            >
-                              <FiPlus size={16} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+        <div className="flex items-center justify-between w-full sm:w-auto order-1 sm:order-2">
+          <div className="text-sm text-gray-500 sm:hidden">
+            تعداد:
+          </div>
+          <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
+            <button
+              disabled={item.quantity <= 1}
+              onClick={() =>
+                updateQuantity(
+                  item.product.id,
+                  item.quantity - 1
+                )
+              }
+              className="w-10 h-10 flex items-center justify-center text-gray-500 hover:bg-gray-100 disabled:opacity-30"
+            >
+              <FiMinus size={16} />
+            </button>
+            <span className="w-12 text-center font-medium text-gray-900 text-sm">
+              {item.quantity}
+            </span>
+            <button
+              onClick={() =>
+                updateQuantity(
+                  item.product.id,
+                  item.quantity + 1
+                )
+              }
+              className="w-10 h-10 flex items-center justify-center text-gray-500 hover:bg-gray-100"
+            >
+              <FiPlus size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
                 );
               })}
             </div>
@@ -350,9 +355,7 @@ ${productCodes}
                   تکمیل سفارش
                 </button>
 
-                <p className="text-xs text-gray-500 text-center">
-                  سفارش شما شامل گارانتی و پشتیبانی ۲۴ ساعته می‌باشد
-                </p>
+     
               </div>
             </div>
 
@@ -415,7 +418,7 @@ ${productCodes}
 
             {/* دکمه واتساپ */}
             <a
-              href={`https://wa.me/989214032487?text=${encodedMessage}`}
+              href={`https://wa.me/9178506698?text=${encodedMessage}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full flex items-center justify-center gap-3 bg-green-500 text-white py-3.5 rounded-xl font-medium hover:bg-green-600 transition-colors"
@@ -430,7 +433,7 @@ ${productCodes}
               ارسال فیش در واتساپ
             </a>
 
-            <p className="text-xs text-gray-500 text-center mt-4">
+            <p className="text-sm text-gray-500 font-bold text-center mt-4">
               پس از واریز، فیش خود را در واتساپ ارسال کنید
             </p>
 
