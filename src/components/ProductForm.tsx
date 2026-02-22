@@ -329,7 +329,7 @@ export default function ProductForm({ product, onSuccess, existingCategories = [
       
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            اگر وارد نکنید، ارسال رایگان خواهد بود
+            اگر وارد نکنید، بسته بندی و کارتن رایگان خواهد بود
           </p>
         </div>
       </div>
