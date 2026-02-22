@@ -85,7 +85,7 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
   // تابع تصحیح شده برای تبدیل ObjectId به URL
   const getImageUrl = (imageId: string): string => {
     if (!imageId || imageId === 'placeholder') {
-      return '/placeholder.jpg';
+      return '/placeholder.svg';
     }
     
     // اگر قبلاً URL کامل است

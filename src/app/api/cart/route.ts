@@ -7,7 +7,7 @@ import { getDatabase } from "../../../../lib/mongodb";
 // تابع کمکی برای تبدیل ObjectId به URL
 function getImageUrl(imageId: string): string {
   if (!imageId || imageId === 'placeholder') {
-    return '/placeholder.jpg';
+    return '/placeholder.svg';
   }
   
   if (imageId.startsWith('http') || imageId.startsWith('https')) {
@@ -82,7 +82,7 @@ export async function GET() {
         price: item.product.price,
         images: item.product.images && item.product.images.length > 0 
           ? item.product.images.map((img: string) => getImageUrl(img))
-          : ['/placeholder.jpg'],
+          : ['/placeholder.svg'],
         inStock: item.product.inStock,
         shippingCost: item.product.shippingCost || 0,
         code: item.product.code || '' // اضافه کردن code
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
         price: fullProduct?.price || 0,
         images: fullProduct?.images && fullProduct.images.length > 0 
           ? fullProduct.images.map((img: string) => getImageUrl(img))
-          : ['/placeholder.jpg'],
+          : ['/placeholder.svg'],
         inStock: fullProduct?.inStock || false,
         shippingCost: fullProduct?.shippingCost || 0,
         code: fullProduct?.code || '' // اضافه کردن code
@@ -302,7 +302,7 @@ export async function PUT(request: NextRequest) {
         price: fullProduct?.price || 0,
         images: fullProduct?.images && fullProduct.images.length > 0 
           ? fullProduct.images.map((img: string) => getImageUrl(img))
-          : ['/placeholder.jpg'],
+          : ['/placeholder.svg'],
         inStock: fullProduct?.inStock || false,
         shippingCost: fullProduct?.shippingCost || 0,
         code: fullProduct?.code || '' // اضافه کردن code

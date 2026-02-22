@@ -11,7 +11,6 @@ import {
   FiCopy,
   FiX,
   FiCreditCard,
-  FiTruck,
 } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -204,7 +203,7 @@ ${productCodes}
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map((item) => {
                 const imageUrl =
-                  item.product.images?.[0] || "/placeholder.jpg";
+                  item.product.images?.[0] || "/placeholder.svg";
 
                 return (
 <div
@@ -241,14 +240,14 @@ ${productCodes}
             </p>
             {(item.product.shippingCost || 0) > 0 ? (
               <div className="flex items-center gap-1 text-xs text-gray-500">
-                <FiTruck size={12} />
-                ارسال:{" "}
+               
+                بسته بندی و کارتن:{" "}
                 {item.product.shippingCost?.toLocaleString()} تومان
               </div>
             ) : (
               <div className="flex items-center gap-1 text-xs text-green-600">
-                <FiTruck size={12} />
-                ارسال رایگان
+              
+                بسته بندی و کارتن: رایگان
               </div>
             )}
           </div>
@@ -324,7 +323,7 @@ ${productCodes}
 
                   <div className="flex justify-between text-gray-600">
                     <span className="flex items-center gap-2">
-                      <FiTruck size={14} /> هزینه ارسال
+                       هزینه بسته بندی و کارتن
                     </span>
                     <span
                       className={`font-medium ${

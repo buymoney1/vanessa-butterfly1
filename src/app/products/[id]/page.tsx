@@ -1,6 +1,6 @@
 // فایل اصلی ProductPage.tsx (سرور کامپوننت)
 import { notFound } from "next/navigation";
-import { FiPackage, FiCheck, FiHome, FiGrid, FiTruck } from "react-icons/fi";
+import { FiPackage, FiCheck, FiHome, FiGrid } from "react-icons/fi";
 import { prisma } from "../../../../lib/prisma";
 import AddToCartButton from "@/components/AddToCartButton";
 import ProductGallery from "@/components/ProductGallery";
@@ -121,8 +121,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 flex items-center gap-2">
-                      <FiTruck size={14} />
-                      هزینه ارسال
+                      
+                      هزینه بسته بندی و کارتن
                     </span>
                     <span className={`font-medium ${product.shippingCost <= 0 ? 'text-green-600' : 'text-gray-900'}`}>
                       {product.shippingCost <= 0 ? 'رایگان' : `${product.shippingCost.toLocaleString()} تومان`}

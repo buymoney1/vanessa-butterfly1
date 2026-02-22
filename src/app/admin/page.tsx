@@ -46,7 +46,7 @@ interface CategoryResponse {
 // تابع تصحیح شده برای تبدیل ObjectId به URL
 const getImageUrl = (imageId: string): string => {
   if (!imageId || imageId === 'placeholder') {
-    return '/placeholder.jpg';
+    return '/placeholder.svg';
   }
   
   // اگر قبلاً URL کامل است
@@ -541,7 +541,7 @@ export default function AdminPage() {
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                   // اگر تصویر لود نشد، جایگزین کنیم
-                                  e.currentTarget.src = '/placeholder.jpg';
+                                  e.currentTarget.src = '/placeholder.svg';
                                 }}
                               />
                             ) : (

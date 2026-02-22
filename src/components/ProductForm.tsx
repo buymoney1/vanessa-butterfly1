@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FiUpload, FiX, FiPlus, FiTrash2, FiPackage, FiRefreshCw, FiTruck } from "react-icons/fi";
+import { FiUpload, FiX, FiPlus, FiTrash2, FiPackage } from "react-icons/fi";
 import toast from "react-hot-toast";
 
 interface ProductFormProps {
@@ -312,8 +312,8 @@ export default function ProductForm({ product, onSuccess, existingCategories = [
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-            <FiTruck className="text-gray-500" />
-            هزینه ارسال (تومان)
+            
+            هزینه بسته بندی و کارتن (تومان)
             <span className="text-xs text-gray-500">(اختیاری)</span>
           </label>
           <div className="relative">

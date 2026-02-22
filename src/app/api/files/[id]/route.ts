@@ -11,18 +11,18 @@ export async function GET(
     
     if (!id || id === 'placeholder') {
       // برگرداندن placeholder
-      return NextResponse.redirect(new URL('/placeholder.jpg', request.url));
+      return NextResponse.redirect(new URL('/placeholder.svg', request.url));
     }
 
     // بررسی معتبر بودن ObjectId
     if (!ObjectId.isValid(id)) {
-      return NextResponse.redirect(new URL('/placeholder.jpg', request.url));
+      return NextResponse.redirect(new URL('/placeholder.svg', request.url));
     }
 
     // دریافت اطلاعات فایل
     const fileInfo = await getFileInfo(id);
     if (!fileInfo) {
-      return NextResponse.redirect(new URL('/placeholder.jpg', request.url));
+      return NextResponse.redirect(new URL('/placeholder.svg', request.url));
     }
 
     // دریافت contentType از metadata
@@ -31,7 +31,7 @@ export async function GET(
     // دریافت stream فایل
     const downloadStream = await getFileStream(id);
     if (!downloadStream) {
-      return NextResponse.redirect(new URL('/placeholder.jpg', request.url));
+      return NextResponse.redirect(new URL('/placeholder.svg', request.url));
     }
 
     // خواندن stream به buffer
@@ -53,6 +53,6 @@ export async function GET(
     
   } catch (error) {
     console.error("Error serving file:", error);
-    return NextResponse.redirect(new URL('/placeholder.jpg', request.url));
+    return NextResponse.redirect(new URL('/placeholder.svg', request.url));
   }
 }

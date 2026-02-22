@@ -1,7 +1,7 @@
 // تولید URL برای نمایش عکس‌های GridFS
 export function getImageUrl(imageId: string): string {
     if (imageId === 'placeholder') {
-      return '/placeholder.jpg';
+      return '/placeholder.svg';
     }
     
     // استفاده از endpoint فایل‌ها
@@ -21,7 +21,7 @@ export function getImageUrl(imageId: string): string {
   // دریافت srcset برای responsive images
   export function getImageSrcset(imageId: string, sizes: number[] = [300, 600, 1200]): string {
     if (imageId === 'placeholder') {
-      return '/placeholder.jpg';
+      return '/placeholder.svg';
     }
     
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';

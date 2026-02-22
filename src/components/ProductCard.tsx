@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo, memo } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
-import { FiShoppingCart, FiEdit, FiTrash2, FiHeart, FiEye, FiTruck, FiCheck } from "react-icons/fi";
+import { FiShoppingCart, FiEdit, FiTrash2, FiHeart, FiEye, FiCheck } from "react-icons/fi";
 
 interface ProductCardProps {
   product: {
@@ -22,78 +22,93 @@ interface ProductCardProps {
   isAdmin?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
+  priority?: boolean; // اضافه کردن priority به props
 }
 
-// تابع برای تبدیل ObjectId به URL
+// کش برای URLهای تصاویر
+const imageUrlCache = new Map<string, string>();
+
+// تابع برای تبدیل ObjectId به URL (بهینه شده)
 function getImageUrl(imageId: string): string {
   if (!imageId || imageId === 'placeholder') {
-    return '/placeholder.jpg';
+    return '/placeholder.svg';
   }
   
-  // بررسی اینکه آیا imageId یک URL کامل هست یا نه
+  // بررسی کش
+  if (imageUrlCache.has(imageId)) {
+    return imageUrlCache.get(imageId)!;
+  }
+  
+  let url: string;
   if (imageId.startsWith('http') || imageId.startsWith('/')) {
-    return imageId;
+    url = imageId;
+  } else {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+    url = `${baseUrl}/api/files/${imageId}`;
   }
   
-  // اگر ObjectId هست، به endpoint فایل‌ها لینک بده
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
-  return `${baseUrl}/api/files/${imageId}`;
+  // ذخیره در کش
+  imageUrlCache.set(imageId, url);
+  return url;
 }
 
-export default function ProductCard({ product, isAdmin, onEdit, onDelete }: ProductCardProps) {
+// تابع ایمن برای فرمت کردن قیمت (بهینه شده)
+const formatPrice = (price: number | undefined | null): string => {
+  if (price === undefined || price === null || isNaN(price)) {
+    return "0";
+  }
+  return price.toLocaleString('fa-IR');
+};
+
+const ProductCard = memo(function ProductCard({ 
+  product, 
+  isAdmin, 
+  onEdit, 
+  onDelete,
+  priority = false // مقدار پیش‌فرض false
+}: ProductCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
 
-  // تبدیل imageId به URL
-  const imageUrl = product.images[currentImageIndex] 
-    ? getImageUrl(product.images[currentImageIndex])
-    : '/placeholder.jpg';
+  // محاسبات با useMemo
+  const imageUrl = useMemo(() => {
+    if (imageError) return '/placeholder.svg';
+    return product.images[currentImageIndex] 
+      ? getImageUrl(product.images[currentImageIndex])
+      : '/placeholder.svg';
+  }, [product.images, currentImageIndex, imageError]);
 
-  // تابع ایمن برای فرمت کردن قیمت
-  const formatPrice = (price: number | undefined | null): string => {
-    if (price === undefined || price === null || isNaN(price)) {
-      return "0";
-    }
-    return price.toLocaleString('fa-IR');
-  };
-
-  // محاسبه قیمت نهایی با احتساب هزینه ارسال
-  const getFinalPrice = (): number => {
+  const getFinalPrice = useCallback((): number => {
     const basePrice = product.price || 0;
     const shippingCost = product.shippingCost || 0;
     return basePrice + shippingCost;
-  };
+  }, [product.price, product.shippingCost]);
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
+  const finalPrice = useMemo(() => getFinalPrice(), [getFinalPrice]);
+
+  const hasMultipleImages = useMemo(() => product.images.length > 1, [product.images]);
+  const isFreeShipping = useMemo(() => 
+    product.shippingCost === undefined || product.shippingCost <= 0
+  , [product.shippingCost]);
+  const isLuxury = useMemo(() => (product.price || 0) > 10000000, [product.price]);
+
+  // هندلرهای بهینه شده با useCallback
+  const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     
     if (!session) {
-      toast.error("لطفاً ابتدا وارد حساب کاربری شوید", { 
-        position: "bottom-center",
-        style: {
-          background: '#1f2937',
-          color: '#fff',
-          borderRadius: '12px',
-          padding: '16px 24px',
-        },
-      });
+      toast.error("لطفاً ابتدا وارد حساب کاربری شوید");
       return;
     }
 
     if (!product.inStock) {
-      toast.error("این محصول در حال حاضر موجود نیست", {
-        position: "bottom-center",
-        style: {
-          background: '#ef4444',
-          color: '#fff',
-          borderRadius: '12px',
-          padding: '16px 24px',
-        },
-      });
+      toast.error("این محصول در حال حاضر موجود نیست");
       return;
     }
 
@@ -108,139 +123,178 @@ export default function ProductCard({ product, isAdmin, onEdit, onDelete }: Prod
         }),
       });
 
-      const data = await response.json();
-
       if (response.ok) {
         toast.success(
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+              <FiCheck className="w-4 h-4 text-green-600" />
             </div>
             <span>{product.title} به سبد خرید اضافه شد</span>
-          </div>,
-          {
-            position: "bottom-center",
-            duration: 3000,
-            style: {
-              background: '#10b981',
-              color: '#fff',
-              borderRadius: '12px',
-              padding: '16px 24px',
-              fontSize: '14px',
-            },
-          }
+          </div>
         );
         
-        // انتقال به صفحه سبد خرید بعد از 1.5 ثانیه
         setTimeout(() => {
           router.push('/cart');
         }, 1500);
-        
       } else {
-        throw new Error(data.error || 'خطا در افزودن به سبد خرید');
+        throw new Error('خطا در افزودن به سبد خرید');
       }
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      toast.error(
-        error instanceof Error ? error.message : 'مشکلی در افزودن به سبد خرید پیش آمده',
-        {
-          position: "bottom-center",
-          style: {
-            background: '#ef4444',
-            color: '#fff',
-            borderRadius: '12px',
-            padding: '16px 24px',
-          },
-        }
-      );
+    } catch {
+      toast.error('مشکلی در افزودن به سبد خرید پیش آمده');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [session, product.inStock, product.id, product.title, router]);
 
-  const handleCardClick = () => {
+  const handleCardClick = useCallback(() => {
     router.push(`/products/${product.id}`);
-  };
+  }, [router, product.id]);
 
-  const handleViewDetails = (e: React.MouseEvent) => {
+  const handleViewDetails = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     router.push(`/products/${product.id}`);
-  };
+  }, [router, product.id]);
 
-  const handleQuickView = (e: React.MouseEvent) => {
+  const handleQuickView = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     // اینجا می‌توانید modal برای نمایش سریع محصول باز کنید
-    console.log("Quick view:", product.id);
-  };
+  }, []);
 
-  const handleLikeClick = (e: React.MouseEvent) => {
+  const handleLikeClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsLiked(!isLiked);
-  };
+    e.preventDefault();
+    setIsLiked(prev => !prev);
+  }, []);
 
-  const handleEditClick = (e: React.MouseEvent) => {
+  const handleImageNavClick = useCallback((e: React.MouseEvent, index: number) => {
     e.stopPropagation();
+    e.preventDefault();
+    setCurrentImageIndex(index);
+    setImageError(false); // ریست خطای تصویر وقتی ایندکس عوض میشه
+  }, []);
+
+  const handleEditClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     onEdit?.();
-  };
+  }, [onEdit]);
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
+  const handleDeleteClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     onDelete?.();
-  };
+  }, [onDelete]);
+
+  const handleMouseEnter = useCallback(() => setIsHovered(true), []);
+  const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+  
+  const handleImageError = useCallback(() => {
+    setImageError(true);
+  }, []);
+
+  // کامپوننت‌های فرعی با useMemo
+  const Badges = useMemo(() => (
+    <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+      {!product.inStock ? (
+        <div className="px-4 py-1.5 bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs font-medium rounded-full shadow-lg">
+          ناموجود
+        </div>
+      ) : (
+        <div className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs font-medium rounded-full shadow-lg">
+          موجود
+        </div>
+      )}
+      
+      {isFreeShipping && (
+        <div className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-medium rounded-full shadow-lg">
+          بسته بندی رایگان
+        </div>
+      )}
+      
+      {isLuxury && (
+        <div className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white text-xs font-medium rounded-full shadow-lg">
+          لاکچری
+        </div>
+      )}
+    </div>
+  ), [product.inStock, isFreeShipping, isLuxury]);
+
+  const CategoryBadge = useMemo(() => (
+    <div className="absolute top-4 right-4 z-10">
+      <div className="px-4 py-1.5 bg-white/80 backdrop-blur-md text-gray-800 text-xs font-medium rounded-full border border-white/40 shadow-lg">
+        {product.category}
+      </div>
+    </div>
+  ), [product.category]);
+
+  const ImageNavigation = useMemo(() => {
+    if (!hasMultipleImages) return null;
+    
+    return (
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-1.5 z-30">
+        {product.images.map((_, index) => (
+          <button
+            key={index}
+            onClick={(e) => handleImageNavClick(e, index)}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              index === currentImageIndex 
+                ? 'bg-white scale-125 shadow-lg' 
+                : 'bg-white/50 hover:bg-white/80'
+            }`}
+            aria-label={`تصویر ${index + 1}`}
+          />
+        ))}
+      </div>
+    );
+  }, [hasMultipleImages, product.images, currentImageIndex, handleImageNavClick]);
+
+  const PriceBreakdown = useMemo(() => {
+    if (!isHovered) return null;
+    
+    return (
+      <div className="absolute bottom-28 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 shadow-xl border border-gray-200 z-40 animate-in fade-in-0 zoom-in-95 duration-200">
+        <div className="space-y-2 min-w-[180px]">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-600">قیمت محصول:</span>
+            <span className="font-medium text-gray-900">{formatPrice(product.price)} تومان</span>
+          </div>
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-600">هزینه بسته بندی:</span>
+            <span className={`font-medium ${isFreeShipping ? 'text-green-600' : 'text-gray-900'}`}>
+              {isFreeShipping ? 'رایگان' : `${formatPrice(product.shippingCost)} تومان`}
+            </span>
+          </div>
+          <div className="border-t border-gray-200 pt-2">
+            <div className="flex justify-between items-center font-bold">
+              <span className="text-gray-700">قیمت نهایی:</span>
+              <span className="text-blue-600">{formatPrice(finalPrice)} تومان</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }, [isHovered, product.price, product.shippingCost, isFreeShipping, finalPrice]);
 
   return (
     <div 
       className="group relative bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-500 cursor-pointer h-full flex flex-col"
       onClick={handleCardClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       
       {/* Gradient Border Effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-transparent group-hover:from-blue-50/20 group-hover:via-purple-50/10 group-hover:to-transparent transition-all duration-500"></div>
       
-      {/* Badges - سمت چپ */}
-      <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-        {!product.inStock ? (
-          <div className="px-4 py-1.5 bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs font-medium rounded-full shadow-lg backdrop-blur-sm">
-            ناموجود
-          </div>
-        ) : (
-          <div className="text-center px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs font-medium rounded-full shadow-lg backdrop-blur-sm">
-            موجود
-          </div>
-        )}
-        
-        {/* هزینه ارسال رایگان */}
-        {(product.shippingCost === undefined || product.shippingCost <= 0) && (
-          <div className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-medium rounded-full shadow-lg backdrop-blur-sm">
-            ارسال رایگان
-          </div>
-        )}
-        
-        {/* قیمت بالا - لوکس */}
-        {(product.price || 0) > 10000000 && (
-          <div className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white text-xs font-medium rounded-full shadow-lg backdrop-blur-sm">
-            لاکچری
-          </div>
-        )}
-      </div>
-
-      {/* دسته‌بندی - سمت راست */}
-      <div className="absolute top-4 right-4 z-10">
-        <div className="px-4 py-1.5 bg-white/80 backdrop-blur-md text-gray-800 text-xs font-medium rounded-full border border-white/40 shadow-lg">
-          {product.category}
-        </div>
-      </div>
+      {Badges}
+      {CategoryBadge}
 
       {/* Product Image Container */}
       <div className="relative h-64 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-        {/* Image Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent z-10"></div>
         
-        {/* Product Image */}
         <Image
           src={imageUrl}
           alt={product.title}
@@ -248,11 +302,14 @@ export default function ProductCard({ product, isAdmin, onEdit, onDelete }: Prod
           className={`object-cover transition-all duration-700 ${isHovered ? 'scale-110 rotate-1' : 'scale-100'}`}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
           unoptimized={imageUrl.includes('/api/files/')}
+          // رفع مشکل: استفاده از priority یا loading لزی، نه هر دو
+          priority={priority}
+          loading={priority ? undefined : "lazy"}
+          onError={handleImageError}
         />
 
         {/* Quick Actions Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
-          {/* Quick View Button */}
           <button
             onClick={handleQuickView}
             className="absolute bottom-4 left-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:text-blue-600 hover:bg-white transition-all duration-200 shadow-lg"
@@ -261,7 +318,6 @@ export default function ProductCard({ product, isAdmin, onEdit, onDelete }: Prod
             <FiEye size={18} />
           </button>
 
-          {/* Wishlist Button */}
           <button
             onClick={handleLikeClick}
             className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:text-red-500 hover:bg-white transition-all duration-200 shadow-lg"
@@ -270,7 +326,6 @@ export default function ProductCard({ product, isAdmin, onEdit, onDelete }: Prod
             <FiHeart size={18} className={isLiked ? "fill-red-500 text-red-500" : ""} />
           </button>
 
-          {/* Admin Actions */}
           {isAdmin && (
             <div className="absolute top-4 left-4 flex gap-2">
               <button
@@ -290,7 +345,6 @@ export default function ProductCard({ product, isAdmin, onEdit, onDelete }: Prod
             </div>
           )}
 
-          {/* Add to Cart Quick Button */}
           {product.inStock && !isAdmin && (
             <button
               onClick={handleAddToCart}
@@ -307,55 +361,32 @@ export default function ProductCard({ product, isAdmin, onEdit, onDelete }: Prod
           )}
         </div>
 
-        {/* Image Navigation */}
-        {product.images.length > 1 && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-1.5 z-30">
-            {product.images.map((_, index) => (
-              <button
-                key={index}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentImageIndex(index);
-                }}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  index === currentImageIndex 
-                    ? 'bg-white scale-125 shadow-lg' 
-                    : 'bg-white/50 hover:bg-white/80'
-                }`}
-              />
-            ))}
-          </div>
-        )}
+        {ImageNavigation}
       </div>
 
       {/* Product Info */}
       <div className="p-6 relative flex-grow flex flex-col">
-        {/* Title */}
         <h3 className="font-bold text-gray-900 text-lg mb-3 line-clamp-1 group-hover:text-blue-600 transition-colors duration-300">
           {product.title}
         </h3>
 
-        {/* Description (مخفف شده) */}
         <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-grow">
           {product.description}
         </p>
 
-        {/* هزینه ارسال */}
         <div className="mb-3">
-          {(product.shippingCost === undefined || product.shippingCost <= 0) ? (
+          {isFreeShipping ? (
             <div className="flex items-center gap-2 text-sm text-green-600">
-              <FiTruck size={14} className="text-green-500" />
-              <span>ارسال رایگان</span>
+              <FiCheck size={16} />
+              <span>بسته بندی و کارتن رایگان</span>
             </div>
           ) : (
             <div className="flex items-center gap-2 text-xs text-gray-600">
-              <FiTruck size={14} className="text-gray-400" />
-              <span>+ {formatPrice(product.shippingCost)} تومان ارسال</span>
+              <span>+ {formatPrice(product.shippingCost)} تومان بسته بندی</span>
             </div>
           )}
         </div>
 
-        {/* Price and Stock Status */}
         <div className="mt-auto mb-6">
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
@@ -368,7 +399,6 @@ export default function ProductCard({ product, isAdmin, onEdit, onDelete }: Prod
               )}
             </div>
             
-            {/* Stock Status with Icon */}
             <div className={`flex items-center gap-2 px-3 py-2 rounded-xl ${
               product.inStock 
                 ? 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border border-emerald-100' 
@@ -389,7 +419,6 @@ export default function ProductCard({ product, isAdmin, onEdit, onDelete }: Prod
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex gap-3">
           <button
             onClick={handleAddToCart}
@@ -400,23 +429,16 @@ export default function ProductCard({ product, isAdmin, onEdit, onDelete }: Prod
                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`}
           >
-            {/* Loading Animation */}
             {isLoading && (
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               </div>
             )}
             
-            {/* Button Content */}
             <div className={`relative z-10 flex items-center gap-2 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
               <FiShoppingCart className="w-4 h-4" />
               {isLoading ? 'در حال افزودن...' : (product.inStock ? 'افزودن به سبد' : 'ناموجود')}
             </div>
-            
-            {/* Hover Effect */}
-            {product.inStock && !isLoading && (
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
-            )}
           </button>
           
           <button 
@@ -428,7 +450,6 @@ export default function ProductCard({ product, isAdmin, onEdit, onDelete }: Prod
           </button>
         </div>
 
-        {/* Admin Actions Footer */}
         {isAdmin && (
           <div className="flex items-center gap-2 pt-4 mt-4 border-t border-gray-100">
             <button
@@ -448,33 +469,12 @@ export default function ProductCard({ product, isAdmin, onEdit, onDelete }: Prod
           </div>
         )}
 
-        {/* Hover Effects */}
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
       </div>
 
-      {/* قیمت تفکیک شده در هور */}
-      {isHovered && (
-        <div className="absolute bottom-28 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 shadow-xl border border-gray-200 z-40 animate-in fade-in-0 zoom-in-95 duration-200">
-          <div className="space-y-2 min-w-[180px]">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600">قیمت محصول:</span>
-              <span className="font-medium text-gray-900">{formatPrice(product.price)} تومان</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600">هزینه ارسال:</span>
-              <span className={`font-medium ${(product.shippingCost === undefined || product.shippingCost <= 0) ? 'text-green-600' : 'text-gray-900'}`}>
-                {(product.shippingCost === undefined || product.shippingCost <= 0) ? 'رایگان' : `${formatPrice(product.shippingCost)} تومان`}
-              </span>
-            </div>
-            <div className="border-t border-gray-200 pt-2">
-              <div className="flex justify-between items-center font-bold">
-                <span className="text-gray-700">قیمت نهایی:</span>
-                <span className="text-blue-600">{formatPrice(getFinalPrice())} تومان</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {PriceBreakdown}
     </div>
   );
-}
+});
+
+export default ProductCard;

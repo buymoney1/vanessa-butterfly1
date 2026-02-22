@@ -21,7 +21,7 @@ interface RelatedProductsProps {
 // تابع تصحیح شده برای تبدیل ObjectId به URL
 const getImageUrl = (imageId: string): string => {
   if (!imageId || imageId === 'placeholder') {
-    return '/placeholder.jpg';
+    return '/placeholder.svg';
   }
   
   // اگر قبلاً URL کامل است
@@ -78,7 +78,7 @@ export default function RelatedProducts({ products }: RelatedProductsProps) {
                   loading="lazy"
                   onError={(e) => {
                     // اگر تصویر لود نشد، جایگزین کنیم
-                    e.currentTarget.src = '/placeholder.jpg';
+                    e.currentTarget.src = '/placeholder.svg';
                   }}
                 />
               </div>
@@ -102,7 +102,7 @@ export default function RelatedProducts({ products }: RelatedProductsProps) {
                 ) : (
                   <div className="mt-1">
                     <span className="text-xs text-green-600">
-                      ✓ ارسال رایگان
+                      ✓ بسته بندی رایگان
                     </span>
                   </div>
                 )}

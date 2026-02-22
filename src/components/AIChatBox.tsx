@@ -99,7 +99,7 @@ export default function ModernAIChatWidget({
     
     // ارسال و تحویل
     { text: 'زمان تحویل', icon: '⏰', category: 'shipping' },
-    { text: 'هزینه ارسال', icon: '🚚', category: 'shipping' },
+    { text: 'هزینه بسته بندی و کارتن', icon: '🚚', category: 'shipping' },
     { text: 'پیگیری سفارش', icon: '📍', category: 'shipping' },
     { text: 'شهرهای تحت پوشش', icon: '🗺️', category: 'shipping' },
     
